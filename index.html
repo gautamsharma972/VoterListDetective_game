@@ -1,0 +1,1535 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Voter List Detective: Gadbad Nagar</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Rozha+One&family=Hind:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --ink:#1d1b2e; --chalk:#fff6e0; --gold:#f4b41a; --red:#c7352a; --blue:#3a66d8; --green:#257a4a;
+  --panel:#fff6e0; --panel-text:#1d1b2e; --muted:#5d5a70; --line:rgba(29,27,46,.2);
+  --btn:#1d1b2e; --btn-text:#fff6e0; --focus:#3a66d8; --note:#fde7a1;
+  --display:'Rozha One',Georgia,'Times New Roman',serif;
+  --body:'Hind',system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px);
+  padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --panel:#26223b; --panel-text:#fff6e0; --muted:#b9b4cf; --line:rgba(255,246,224,.22);
+    --btn:#f4b41a; --btn-text:#1d1b2e; --focus:#ffd36e; --note:#4a4020;
+  }
+}
+:root[data-theme="dark"]{
+  --panel:#26223b; --panel-text:#fff6e0; --muted:#b9b4cf; --line:rgba(255,246,224,.22);
+  --btn:#f4b41a; --btn-text:#1d1b2e; --focus:#ffd36e; --note:#4a4020;
+}
+html{scroll-padding-top:env(safe-area-inset-top,0px);height:100%}
+*,*::before,*::after{box-sizing:inherit}
+body{margin:0;height:100%;overflow:hidden;font-family:var(--body);color:var(--panel-text);
+  background:linear-gradient(#ffd98a,#ff9a6b 60%,#e8704f);transition:background 1s}
+body.l2{background:linear-gradient(#f0825f,#8a4a7d 60%,#3a2a5a)}
+body.l3{background:linear-gradient(#141838,#2a2255 60%,#4a2a5a)}
+button{font-family:inherit}
+:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+#scene{position:fixed;inset:0;width:100%;height:100%;display:block;touch-action:none}
+
+/* HUD */
+#hud{position:fixed;top:0;left:0;right:0;display:flex;justify-content:space-between;align-items:stretch;gap:8px;
+  padding:calc(env(safe-area-inset-top,0px) + 8px) 10px 0;pointer-events:none;z-index:5}
+.chip{background:rgba(29,27,46,.78);color:#fff6e0;border-radius:10px;padding:6px 10px;display:flex;flex-direction:column;
+  font-weight:700;font-size:14px;line-height:1.2;min-width:0}
+.chip small{font-weight:400;font-size:12px;opacity:.85}
+.chip.mid{align-items:center}.chip.right{align-items:flex-end}
+#pips{display:flex;gap:4px;margin-top:3px}
+#pips i{width:12px;height:12px;border-radius:50%;border:2px solid #f4b41a;background:transparent;display:block}
+#pips i.on{background:#f4b41a}
+
+/* Speech bubbles */
+#bubbles{position:fixed;left:10px;right:10px;top:calc(env(safe-area-inset-top,0px) + 62px);display:flex;flex-direction:column;gap:6px;
+  pointer-events:none;z-index:4;max-width:430px}
+.bub{margin:0;background:#fff6e0;color:#1d1b2e;border:2px solid #1d1b2e;border-radius:12px;padding:7px 10px;font-size:14px;line-height:1.3;
+  width:fit-content;max-width:100%}
+.bub b{font-family:var(--display);font-weight:400;margin-right:4px}
+.bub.jim{align-self:flex-end;border-color:#c7352a;background:#ffe3df}
+.bub[hidden]{display:none}
+
+/* Docks (bottom sheets) */
+.dock{position:fixed;left:0;right:0;bottom:0;background:var(--panel);color:var(--panel-text);border-radius:18px 18px 0 0;
+  padding:12px 12px calc(env(safe-area-inset-bottom,0px) + 12px);box-shadow:0 -6px 24px rgba(0,0,0,.35);
+  transform:translateY(110%);transition:transform .3s ease;max-height:64%;overflow:auto;z-index:6;visibility:hidden}
+.dock.show{transform:none;visibility:visible}
+@media (min-width:900px){
+  .dock{left:auto;right:16px;top:74px;bottom:16px;width:390px;border-radius:18px;max-height:none;transform:translateX(115%)}
+  .dock.show{transform:none}
+  #bubbles{max-width:380px}
+}
+
+#timer{display:none;height:6px;background:var(--line);border-radius:3px;overflow:hidden;margin-bottom:8px}
+#timer.on{display:block}
+#timerFill{height:100%;width:100%;background:var(--gold)}
+#timerFill.low{background:var(--red)}
+.caseno{font-size:13px;color:var(--muted);margin:0 0 6px;font-weight:600}
+
+/* ID card */
+.idcard{background:#fff6e0;color:#1d1b2e;border:2px solid #1d1b2e;border-radius:10px;padding:8px 10px;
+  display:grid;grid-template-columns:78px 1fr;gap:6px 10px}
+.idhead{grid-column:1/-1;font-family:var(--display);font-size:13px;border-bottom:1px solid rgba(29,27,46,.3);padding-bottom:3px}
+.photo{width:78px;height:78px;border:2px solid #1d1b2e;border-radius:6px;overflow:hidden;background:#cfe3e0;align-self:start}
+.photo svg{display:block;width:100%;height:100%}
+.idcard dl{margin:0;display:grid;grid-template-columns:auto 1fr;gap:1px 8px;font-size:13px;line-height:1.3;align-content:start}
+.idcard dt{color:#5d5a70}
+.idcard dd{margin:0;font-weight:700;overflow-wrap:anywhere}
+.note{grid-column:1/-1;margin:0;background:#fde7a1;color:#1d1b2e;border-radius:6px;padding:5px 8px;font-size:13px;line-height:1.3;font-style:italic}
+
+/* Actions */
+.actions{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-top:10px}
+.act{border:0;border-radius:10px;min-height:50px;padding:6px 4px;font:700 14px/1.15 var(--body);color:#fff;cursor:pointer;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;text-align:center}
+.act small{font-weight:600;font-size:11px;opacity:.92}
+.act:active{transform:scale(.97)}
+.act.clear{background:var(--green)}
+.act.f7{background:var(--red)}
+.act.f8{background:var(--gold);color:#1d1b2e}
+.act.f6{background:var(--blue)}
+.linkbtn{background:none;border:0;color:var(--panel-text);text-decoration:underline;font-size:13px;margin-top:8px;padding:6px 0;cursor:pointer;min-height:36px}
+.ledger{list-style:none;margin:4px 0 0;padding:0;display:grid;gap:4px;max-height:140px;overflow:auto}
+.ledger[hidden]{display:none}
+.ledger li{display:flex;gap:8px;align-items:center;font-size:12.5px;border:1px solid var(--line);border-radius:8px;padding:3px 6px}
+.ledger svg{width:30px;height:30px;border-radius:4px;flex:none}
+.ledger span{color:var(--muted)}
+
+/* Result */
+#result h3{font-family:var(--display);font-weight:400;font-size:24px;margin:0 0 6px}
+#result h3.good{color:var(--green)} #result h3.bad{color:var(--red)}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) #result h3.good{color:#5fd495} :root:not([data-theme="light"]) #result h3.bad{color:#ff8c80}}
+:root[data-theme="dark"] #result h3.good{color:#5fd495} :root[data-theme="dark"] #result h3.bad{color:#ff8c80}
+#result p{margin:0 0 8px;font-size:15px;line-height:1.4}
+#result .fact{border-left:4px solid var(--gold);padding-left:10px}
+#result .tally{font-weight:700}
+.primary{background:var(--btn);color:var(--btn-text);border:0;border-radius:12px;padding:12px 16px;font:700 16px var(--body);min-height:46px;width:100%;cursor:pointer}
+.secondary{background:transparent;color:var(--panel-text);border:2px solid var(--panel-text);border-radius:12px;padding:10px 16px;font:700 15px var(--body);min-height:44px;width:100%;cursor:pointer;margin-top:8px}
+
+/* Overlays */
+.overlay{position:fixed;inset:0;display:none;align-items:center;justify-content:center;padding:16px;background:rgba(20,18,36,.55);z-index:20}
+.overlay.show{display:flex}
+.sheet{background:var(--panel);color:var(--panel-text);border-radius:16px;padding:20px;max-width:440px;width:100%;
+  box-shadow:0 12px 40px rgba(0,0,0,.45);max-height:92%;overflow:auto}
+.sheet h1{font-family:var(--display);font-weight:400;font-size:34px;line-height:1.05;margin:0 0 10px}
+.sheet h2{font-family:var(--display);font-weight:400;font-size:26px;line-height:1.1;margin:0 0 6px}
+.sheet h3{font-family:var(--display);font-weight:400;font-size:22px;margin:0 0 6px}
+.sheet p{margin:0 0 12px;line-height:1.45;font-size:16px}
+.sheet .small{font-size:13px;color:var(--muted)}
+.sheet blockquote{margin:0 0 14px;padding:8px 12px;border-left:4px solid var(--red);background:var(--note);font-style:italic;border-radius:0 8px 8px 0}
+.stats{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:0 0 14px}
+.stats div{border:1px solid var(--line);border-radius:10px;padding:8px 10px;font-size:13px;color:var(--muted)}
+.stats b{display:block;font-size:22px;color:var(--panel-text);font-family:var(--display);font-weight:400}
+.track{position:relative;height:34px;border:2px solid var(--panel-text);border-radius:8px;margin:12px 0 14px;overflow:hidden;background:var(--line)}
+.zone2{position:absolute;left:28%;width:44%;top:0;bottom:0;background:rgba(37,122,74,.35)}
+.zone{position:absolute;left:40%;width:20%;top:0;bottom:0;background:#257a4a}
+.mark{position:absolute;top:0;bottom:0;width:8px;margin-left:-4px;background:#c7352a;border-radius:3px}
+.stampmsg{min-height:22px;font-weight:700;margin:0 0 8px}
+.sharebox{font-size:14px;background:var(--note);border-radius:8px;padding:8px 10px;margin:0 0 10px;overflow-wrap:anywhere}
+.legend{display:flex;gap:6px;flex-wrap:wrap;margin:0 0 12px}
+.legend span{font-size:12.5px;font-weight:700;color:#fff;padding:3px 8px;border-radius:999px}
+.legend .a{background:var(--red)}.legend .b{background:var(--gold);color:#1d1b2e}.legend .c{background:var(--blue)}
+.nogl{position:fixed;left:12px;right:12px;top:120px;background:#fff6e0;color:#1d1b2e;border:2px solid #1d1b2e;padding:10px;border-radius:10px;z-index:3;font-size:14px}
+.mutebtn{pointer-events:auto;background:rgba(29,27,46,.78);color:#fff;border:0;border-radius:10px;width:40px;font-size:18px;cursor:pointer;flex:none}
+.primary:disabled{opacity:.45;cursor:not-allowed}
+.sheet .fact{border-left:4px solid var(--gold);padding-left:10px}
+.issues{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:0 0 12px}
+.issuebtn{display:flex;flex-direction:column;gap:3px;text-align:left;background:transparent;color:var(--panel-text);border:2px solid var(--line);border-radius:12px;padding:10px;font:inherit;cursor:pointer;min-height:44px}
+.issuebtn b{font-family:var(--display);font-weight:400;font-size:18px}
+.issuebtn span{font-size:12.5px;color:var(--muted);line-height:1.3}
+#vote h3{font-family:var(--display);font-weight:400;font-size:20px;margin:0 0 4px}
+#vote .sub{margin:0 0 8px;font-size:13.5px;color:var(--muted);line-height:1.35}
+.cands{display:grid;gap:6px;margin:0 0 8px}
+.cand{display:grid;grid-template-columns:44px 1fr auto;gap:2px 10px;align-items:center;text-align:left;width:100%;background:transparent;color:var(--panel-text);border:2px solid var(--line);border-radius:12px;padding:8px;font:inherit;cursor:pointer}
+.cand[aria-pressed="true"]{border-color:var(--gold);background:var(--note)}
+.cand .fc{width:44px;height:44px;border-radius:8px;overflow:hidden;grid-row:1/3;align-self:start}
+.fc svg{display:block;width:100%;height:100%}
+.cand b{font-size:14px}
+.cand small{display:block;color:var(--muted);font-size:12px}
+.cand .pr{grid-column:2/4;font-size:13.5px;line-height:1.3;margin:0}
+.meter{display:flex;gap:2px;align-items:flex-end;height:18px}
+.meter i{width:6px;border-radius:2px;background:var(--line);display:block}
+.meter i.on{background:var(--green)}
+#castWrap{position:sticky;bottom:0;background:var(--panel);padding-top:6px}
+#result details{margin:0 0 8px;font-size:14px}
+#result summary{cursor:pointer;font-weight:700;margin-bottom:6px;min-height:32px}
+#hud{gap:6px}
+.chip{padding:6px 8px;font-size:13px}
+.bub small{display:block;opacity:.8;font-size:12px}
+.langrow{display:flex;gap:6px;margin:12px 0 0}
+.langrow button{flex:1;min-height:40px;border:2px solid var(--line);background:transparent;color:var(--panel-text);border-radius:10px;font:600 14px var(--body);cursor:pointer}
+.langrow button[aria-pressed="true"]{border-color:var(--gold);background:var(--note)}
+.badges{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:0 0 12px}
+.badge{border:1px solid var(--line);border-radius:12px;padding:8px;display:flex;flex-direction:column;gap:2px;align-items:flex-start;opacity:.6}
+.badge.on{opacity:1;border-color:var(--gold);background:var(--note)}
+.badge svg{width:40px;height:40px}
+.badge b{font-size:14px;line-height:1.2}
+.badge span{font-size:12px;color:var(--muted);line-height:1.3}
+.badge small{font-size:11.5px;font-weight:700}
+@media (prefers-reduced-motion: reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body class="l1">
+<canvas id="scene" aria-hidden="true"></canvas>
+
+<header id="hud">
+  <div class="chip"><span id="rank">Trainee Clerk</span><small id="lvl">Level 1 of 3</small></div>
+  <div class="chip mid"><small>Reputation</small><span id="pips" role="img" aria-label="Reputation 5 of 5"></span></div>
+  <div class="chip right"><span id="score">0</span><small id="streak">Streak 0</small></div>
+  <button id="mute" class="mutebtn" aria-label="Sound on">🔊</button>
+  <button id="lang" class="mutebtn" aria-label="Language" style="font-size:14px;font-weight:700">EN</button>
+</header>
+
+<div id="bubbles">
+  <p id="tota" class="bub" aria-live="polite" hidden></p>
+  <p id="jim" class="bub jim" hidden></p>
+</div>
+
+<section id="panel" class="dock" aria-label="Current voter">
+  <div id="timer"><div id="timerFill"></div></div>
+  <p id="caseno" class="caseno"></p>
+  <div id="card"></div>
+  <div class="actions" id="actions">
+    <button class="act clear" data-c="ok">Clear<small>Looks genuine</small></button>
+    <button class="act f7" data-c="dup">Duplicate<small>Form 7</small></button>
+    <button class="act f7" data-c="dead">Deceased<small>Form 7</small></button>
+    <button class="act f7" data-c="ghost">Not a person<small>Form 7</small></button>
+    <button class="act f8" data-c="addr">Wrong address<small>Form 8</small></button>
+    <button class="act f6" data-c="new">Not on roll<small>Form 6</small></button>
+  </div>
+  <button id="ledgerBtn" class="linkbtn" aria-expanded="false" aria-controls="ledger">Roll so far (0)</button>
+  <ul id="ledger" class="ledger" hidden></ul>
+</section>
+
+<section id="result" class="dock" aria-live="polite"></section>
+<section id="vote" class="dock" aria-label="Candidates"></section>
+<div id="stamp" class="overlay"></div>
+<div id="modal" class="overlay"></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+(function(){
+'use strict';
+
+/* ---------- helpers ---------- */
+var RM = !!(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches);
+var $ = function(id){ return document.getElementById(id); };
+var pick = function(a){ return a[Math.floor(Math.random()*a.length)]; };
+var SPD = RM ? 0.4 : 1;
+
+/* ---------- game data ---------- */
+var SK = ['#f3cfa6','#dca878','#b9814f','#8f5b39'];
+function F(skin, shirt, hat, o){ return Object.assign({skin:SK[skin], shirt:shirt, hat:hat}, o||{}); }
+
+var LABEL = {
+  ok:'a genuine voter', dup:'a duplicate entry', dead:'a deceased voter',
+  ghost:'a ghost entry (not a real person)', addr:'a wrong address', 'new':'a voter missing from the roll'
+};
+var FORM = { dup:7, dead:7, ghost:7, addr:8, 'new':6 };
+var FORMTXT = {
+  7:'Form 7 is used to object to an entry on the roll.',
+  8:'Form 8 is used to correct details or change an address.',
+  6:'Form 6 is used to register as a new voter.'
+};
+
+var ramesh = F(1,'#c8541a','none',{stache:1});
+var pappu  = F(2,'#e07a20','none',{stache:1});
+var anita  = F(1,'#c2185b','none',{long:1});
+
+var LEVELS = [
+ { title:'The Roll Room', timer:0,
+   intro:'Gadbad Nagar\u2019s voter roll is a mess. Check every voter who walks up. Genuine? Clear them. Something off? Flag it and file the right form.',
+   jimmy:'Relax, Inspector. What could go wrong? Trust me, yaar.',
+   cases:[
+    {n:'Savita Deshmukh', f:'W/o Raghunath Deshmukh', age:34, addr:'12, Neem Gali', no:'GN-0114',
+     note:'Arrived with her own pen. Suspiciously organised.', t:'ok', face:F(1,'#2f6f73','none',{long:1}),
+     line:'Clean as a freshly washed steel tumbler. Nothing wrong here.',
+     fact:'Most entries on a roll are genuine. Flagging a real voter is as serious as missing a fake one.'},
+    {n:'Bhola Prasad', f:'S/o Late Shiv Prasad', age:121, addr:'3, Mill Road', no:'GN-0066',
+     note:'The ration shop says he still collects wheat. His WhatsApp status says online.', t:'dead', j:1,
+     face:F(3,'#8a8a8a','topi',{stache:1}),
+     line:'Born before the telegraph, apparently still very active on WhatsApp. Jimmy forgot to update the roll.',
+     fact:'Form 7 lets people raise an objection to an entry, such as a deceased voter. Officers verify before anything is removed.'},
+    {n:'Ramesh Kumar', f:'S/o Suresh Kumar', age:45, addr:'7, Peepal Chowk', no:'GN-0231',
+     note:'Proud owner of a magnificent moustache.', t:'ok', face:ramesh,
+     line:'A genuine voter with a genuine moustache. Remember his face, you will see it again.',
+     fact:'Use the roll so far list at the bottom. Duplicates show up as the same person entered twice.'},
+    {n:'Rmesh Kumar', f:'S/o Suresh Kumar', age:45, addr:'7, Peepal Chowk', no:'GN-0877',
+     note:'The moustache looks freshly stuck on. Slightly crooked.', t:'dup', j:1,
+     face:Object.assign({}, ramesh, {fake:1}),
+     line:'One missing letter, one crooked moustache, same man. Jimmy is not great at disguises.',
+     fact:'A person should appear on the roll only once. Duplicate entries are objected to with Form 7.'},
+    {n:'Gudiya Verma', f:'D/o Anil Verma', age:29, addr:'House No. 1, Behind the Big Banyan Tree', no:'GN-0402',
+     note:'Fourteen other voters share this address. The banyan tree has not been consulted.', t:'addr',
+     face:F(2,'#d63c2f','none',{long:1}),
+     line:'Fourteen voters, one tree. Not every error is fraud. Sometimes the roll simply needs fixing.',
+     fact:'Form 8 is for correcting details, or changing your address within the same constituency.'},
+    {n:'Aarav Joshi', f:'S/o Mahesh Joshi', age:19, addr:'5, Kabir Lane', no:'\u2014',
+     note:'Not found on the roll. Has been waiting since his 18th birthday.', t:'new',
+     face:F(0,'#3a66d8','cap'),
+     line:'Eligible, enthusiastic, and missing from the list. No villain here, just a gap.',
+     fact:'Form 6 is for new voters who have turned 18. It can be filed online too.'},
+    {n:'Farida Khan', f:'D/o Salim Khan', age:36, addr:'19, Rose Garden Lane', no:'GN-0290',
+     note:'Has a spreadsheet of every deadline. Even yours.', t:'ok', face:F(1,'#2f6f73','none',{long:1}),
+     line:'Organised, genuine and slightly intimidating. Cleared.',
+     fact:'Checking your own entry on the roll before an election avoids last-minute surprises.'}
+   ]},
+ { title:'Jimmy\u2019s Disguises', timer:0,
+   intro:'Jimmy is back with new tricks. Twins, lookalikes and a few entries that are not even people. Be careful: some strange cases are perfectly real.',
+   jimmy:'New hat, new glasses, same old me!',
+   cases:[
+    {n:'Asha Kulkarni', f:'D/o Vinayak Kulkarni', age:23, addr:'Flat 2, Lakeview Heights', no:'\u2014',
+     note:'Moved to Gadbad Nagar from another city a month ago. Her old voter card is still in her old city.', t:'new',
+     face:F(1,'#c8541a','none',{long:1}),
+     line:'New town, same voter, no entry here yet. A fresh start, not a fraud.',
+     fact:'Moved to a different constituency? File Form 6 in the place where you now live.'},
+    {n:'Mohan Lal', f:'S/o Gopal Lal', age:38, addr:'3, Mill Road, Gadbad Nagar', no:'GN-0310',
+     note:'Runs the bicycle shop on the corner. Fixed your tyre last week.', t:'ok', face:F(1,'#e0a100','topi'),
+     line:'An honest voter with an honest puncture repair business.',
+     fact:'Knowing a voter personally is not a reason to clear or flag anyone. Check the card.'},
+    {n:'Pappu Singh', f:'S/o Hari Singh', age:52, addr:'22, Station Road', no:'GN-0488',
+     note:'Wears the same orange shirt every election.', t:'ok', face:pappu,
+     line:'Genuine. Note that face and that shirt for later.',
+     fact:'Comparing details like the relative\u2019s name, age and photo is how duplicates are found.'},
+    {n:'Kamala Bai', f:'W/o Late Ganesh Bai', age:96, addr:'9, Temple Lane', no:'GN-0099',
+     note:'Neighbours attended the funeral last monsoon. Her cup at the corner shop was retired with honours.', t:'dead', j:1,
+     face:F(1,'#c9c9c9','none',{long:1}),
+     line:'Gone, but still on the roll. Jimmy hoped nobody would look.',
+     fact:'Deaths are registered with the local registrar. A death certificate helps the officer verify an objection.'},
+    {n:'Sohan Lal', f:'S/o Gopal Lal', age:38, addr:'3, Mill Road, Gadbad Nagar', no:'GN-0311',
+     note:'Twin of Mohan Lal, born four minutes later. Insists he is the handsome one.', t:'ok', face:F(1,'#2f6f73','cap'),
+     line:'Twins! Same father, same birthday, different human. A trap for the trigger-happy.',
+     fact:'Look at the whole picture before flagging. Similar details do not always mean a duplicate.'},
+    {n:'Pappu Sing', f:'S/o Hari Singh', age:52, addr:'22, Station Road', no:'GN-0902',
+     note:'Wearing cardboard glasses. Looks like Pappu Singh with a cold.', t:'dup', j:1,
+     face:Object.assign({}, pappu, {glasses:1}),
+     line:'Same face, same shirt, brand new glasses. Jimmy recycled his own disguise.',
+     fact:'Duplicates can be objected to with Form 7 so one person cannot vote twice.'},
+    {n:'Bijli Khamba', f:'S/o Electric Board', age:'40 (watts)', addr:'Pole No. 14, Main Road', no:'GN-0777',
+     note:'The photo is remarkably bright. Has not moved in eleven years.', t:'ghost', j:1, kind:'lamp',
+     line:'A lamp post with a voter card. Jimmy is running out of friends.',
+     fact:'Entries with no real person behind them can be objected to with Form 7. Field verification checks that voters exist.'},
+    {n:'Sheela Pandey', f:'W/o Dinesh Pandey', age:41, addr:'Flat 4B, Sunrise Apartments', no:'GN-0356',
+     note:'That building was demolished in 2016. She lives across town now, and has the receipts.', t:'addr',
+     face:F(1,'#7a3f98','none',{long:1}),
+     line:'An honest mix-up, no villain. Her address simply never got updated.',
+     fact:'Moved within the same constituency? Form 8 updates your address. Moved to another one? File Form 6 there.'},
+    {n:'Raja Babu', f:'S/o Late Hukum Singh', age:88, addr:'1, Old Fort Road', no:'GN-0021',
+     note:'Walks five kilometres daily and judges everyone he passes.', t:'ok', face:F(3,'#f1f1f1','topi',{stache:1}),
+     line:'Eighty-eight and perfectly alive. Age alone proves nothing.',
+     fact:'Never flag on a hunch. Wrongly removing a name takes away someone\u2019s vote, which is why verification matters.'}
+   ]},
+ { title:'The Mega Scheme', timer:15,
+   intro:'Jimmy\u2019s biggest scheme yet, and the clock is running. You have 15 seconds per voter, and faster answers earn bonus points.',
+   jimmy:'Ten thousand names, one friend. You cannot stop me!',
+   cases:[
+    {n:'Balwant Chauhan', f:'S/o Karan Chauhan', age:58, addr:'7, Post Office Road', no:'GN-0912',
+     note:'Looks suspiciously like a villain. Is a retired postman.', t:'ok', face:F(3,'#2a2a3d','none',{stache:1,glasses:1}),
+     line:'Dark glasses, big moustache, perfectly innocent. Looks are not evidence.',
+     fact:'Judge the record, not the looks. Wrongly flagging a real voter has real consequences.'},
+    {n:'Anita Reddy', f:'W/o Prakash Reddy', age:31, addr:'18, Lotus Colony', no:'GN-1201',
+     note:'Brought snacks for the whole queue.', t:'ok', face:anita,
+     line:'Genuine. Also generous.',
+     fact:'Remember her. The Mega Scheme loves copies.'},
+    {n:'Putla Ram', f:'S/o Kisan Ram', age:55, addr:'Field No. 3, Middle of the Field', no:'GN-1344',
+     note:'Has not moved in four years. Excellent posture.', t:'ghost', j:1, kind:'scarecrow',
+     line:'A scarecrow with a voter card. Great posture, zero eligibility.',
+     fact:'Ghost entries have no real person behind them. Field verification by booth officers helps catch them.'},
+    {n:'Imran Qureshi', f:'S/o Yusuf Qureshi', age:47, addr:'40, Station Road', no:'GN-0765',
+     note:'No notes. Just a person trying to vote and find a samosa.', t:'ok', face:F(2,'#1d6f5a','cap',{stache:1}),
+     line:'Plain, honest and hungry. Nothing wrong here.',
+     fact:'Most voters look exactly like this. Do not let the villain make you paranoid.'},
+    {n:'Anita Reddi', f:'W/o Prakash Reddy', age:31, addr:'18, Lotus Colony', no:'GN-1587',
+     note:'Brought no snacks. Suspicious.', t:'dup', j:1, face:anita,
+     line:'Same face, one letter changed, zero snacks. Classic Jimmy.',
+     fact:'A duplicate means one person could vote twice, which is why Form 7 objections exist.'},
+    {n:'Hari Om Tiwari', f:'S/o Late Banke Tiwari', age:104, addr:'11, Haveli Gali', no:'GN-0033',
+     note:'A death certificate was filed in 2018, but the roll never caught up.', t:'dead', j:1,
+     face:F(3,'#a0a0a0','turban',{stache:1}),
+     line:'Still on the roll years later. Jimmy loves a lagging register.',
+     fact:'Anyone can alert officers about a deceased voter with Form 7. A death certificate helps verification.'},
+    {n:'Meena Tiwari', f:'D/o Ashok Tiwari', age:26, addr:'11, Haveli Gali', no:'GN-1440',
+     note:'Hari Om\u2019s granddaughter. Same surname, same house, different human.', t:'ok',
+     face:F(1,'#2f6f73','none',{long:1}),
+     line:'Families share surnames and addresses. That is normal, not suspicious.',
+     fact:'A shared address and surname does not make a duplicate.'},
+    {n:'Jagdish Nair', f:'S/o Raman Nair', age:60, addr:'Near Railway Crossing, Ward 4', no:'GN-0618',
+     note:'Moved to a new flat in the same ward last year. The roll still shows the old place.', t:'addr',
+     face:F(2,'#556b2f','cap',{glasses:1,stache:1}),
+     line:'He moved, the roll did not. Paperwork, not villainy.',
+     fact:'Update your address with Form 8 so you vote at the right booth.'},
+    {n:'Tanvi Bose', f:'D/o Rohit Bose', age:18, addr:'2, Lake View Society', no:'\u2014',
+     note:'Turned 18 last month. Her mum brought her. Her mum brought a thermos.', t:'new',
+     face:F(0,'#f4b41a','none',{long:1}),
+     line:'A brand new voter, ready and thermos-equipped.',
+     fact:'Form 6 is the first step to getting on the roll once you turn 18.'}
+   ]}
+];
+
+var STORY = LEVELS;
+var TOTA_GOOD = ['Elementary, my dear Matdaan.','Sharp beak, sharper eyes.','Now that is detective work.','The roll just sighed in relief.'];
+var TOTA_OK   = ['Clear it is. Not everyone is a villain.','Good call. Genuine voters deserve a fast pass.','Squawk! Smooth.'];
+var TOTA_BAD  = ['Bold. Wrong, but bold.','I have seen better work from a lamp post.','Interesting. Wrong, but interesting.','Squawk. Try again.'];
+var CATCH = ['Curse you, Inspector!','How did you spot that?!','That disguise cost me two rupees!','Next time, yaar, next time!'];
+var WIN   = ['Trust me, yaar.','See? Nobody noticed.','It is just one vote, what is the harm?'];
+
+var RANKS = [['Trainee Clerk',0],['Junior Sleuth',600],['Senior Inspector',1500],['Roll Master',2600]];
+function rankFor(s){ var r=RANKS[0][0]; for(var i=0;i<RANKS.length;i++){ if(s>=RANKS[i][1]) r=RANKS[i][0]; } return r; }
+
+/* ---------- sound (synthesised, no files) ---------- */
+var AC = null, muted = false;
+try { muted = (localStorage.getItem('vld-muted') === '1'); } catch(e){}
+function audioInit(){
+  try {
+    if (!AC){ var C = window.AudioContext || window.webkitAudioContext; if (C) AC = new C(); }
+    if (AC && AC.state === 'suspended') AC.resume();
+  } catch(e){}
+}
+function tone(f, d, type, vol, delay, slide){
+  if (!AC || muted) return;
+  try {
+    var t = AC.currentTime + (delay || 0), o = AC.createOscillator(), g = AC.createGain();
+    o.type = type || 'sine';
+    o.frequency.setValueAtTime(f, t);
+    if (slide) o.frequency.exponentialRampToValueAtTime(slide, t + d);
+    g.gain.setValueAtTime(0.0001, t);
+    g.gain.exponentialRampToValueAtTime(vol || 0.15, t + 0.01);
+    g.gain.exponentialRampToValueAtTime(0.0001, t + d);
+    o.connect(g); g.connect(AC.destination); o.start(t); o.stop(t + d + 0.05);
+  } catch(e){}
+}
+var sfx = {
+  tap:function(){ tone(520, 0.06, 'square', 0.05); },
+  good:function(){ tone(523, 0.12, 'triangle', 0.18); tone(659, 0.12, 'triangle', 0.18, 0.1); tone(784, 0.22, 'triangle', 0.18, 0.2); },
+  bad:function(){ tone(220, 0.28, 'sawtooth', 0.12, 0, 110); tone(900, 0.1, 'sawtooth', 0.05, 0, 600); },
+  stamp:function(){ tone(130, 0.12, 'square', 0.22, 0, 60); tone(70, 0.14, 'sine', 0.3, 0.02); },
+  catchj:function(){ tone(300, 0.1, 'square', 0.1); tone(200, 0.22, 'square', 0.1, 0.1, 120); },
+  jimmy:function(){ tone(400, 0.08, 'sawtooth', 0.08); tone(500, 0.08, 'sawtooth', 0.08, 0.1); tone(400, 0.08, 'sawtooth', 0.08, 0.2); tone(300, 0.25, 'sawtooth', 0.08, 0.3, 200); },
+  win:function(){ [523,659,784,1047].forEach(function(f, i){ tone(f, 0.18, 'triangle', 0.18, i*0.12); }); },
+  vote:function(){ tone(180, 0.18, 'sine', 0.25, 0, 90); tone(660, 0.2, 'triangle', 0.15, 0.2); tone(880, 0.3, 'triangle', 0.15, 0.32); }
+};
+
+/* ---------- state ---------- */
+var S = {lvl:0, idx:0, score:0, rep:5, combo:0, cur:null, locked:true, ledger:[],
+         lvlCorrect:0, lvlJ:0, lvlJCaught:0, tLeft:0, timerOn:false, caught:0, total:0, correctAll:0};
+
+/* ---------- tweens ---------- */
+var tweens = [];
+function ease(t){ return t<.5 ? 2*t*t : 1-Math.pow(-2*t+2,2)/2; }
+function tween(dur, fn, done){ tweens.push({t:0, dur:dur*SPD, fn:fn, done:done}); }
+
+/* ---------- 3D world ---------- */
+var GL = (typeof THREE !== 'undefined');
+var renderer, scene, camera, hemi, sunL, ground, sunM, jimmy, parrot, cur3d = null;
+var chars = [], winA, winB, bulbMats = [];
+var px = 0, time = 0;
+
+if (GL) { try { renderer = new THREE.WebGLRenderer({canvas:$('scene'), antialias:true, alpha:true}); } catch(e){ GL = false; } }
+
+function mat(c){ return new THREE.MeshLambertMaterial({color:c}); }
+function mesh(geo, m, x, y, z){ var o = new THREE.Mesh(geo, m); o.position.set(x||0, y||0, z||0); return o; }
+
+function makePerson(f){
+  var g = new THREE.Group(), skin = mat(f.skin), shirt = mat(f.shirt), dark = mat('#2b2b3a'), black = mat('#161616');
+  g.userData.legs = [];
+  [-0.17,0.17].forEach(function(x){
+    var p = new THREE.Group(); p.position.set(x,0.72,0);
+    p.add(mesh(new THREE.BoxGeometry(0.2,0.72,0.22), dark, 0,-0.36,0));
+    g.add(p); g.userData.legs.push(p);
+  });
+  g.add(mesh(new THREE.CylinderGeometry(0.36,0.46,0.95,14), shirt, 0,1.18,0));
+  [-1,1].forEach(function(s){
+    var a = mesh(new THREE.CylinderGeometry(0.09,0.09,0.75,8), shirt, s*0.5,1.15,0); a.rotation.z = s*0.12; g.add(a);
+    g.add(mesh(new THREE.SphereGeometry(0.1,8,8), skin, s*0.55,0.75,0));
+  });
+  g.add(mesh(new THREE.SphereGeometry(0.36,16,14), skin, 0,1.98,0));
+  [-0.13,0.13].forEach(function(x){ g.add(mesh(new THREE.SphereGeometry(0.045,8,8), black, x,2.04,0.32)); });
+  if (f.long) { var hr = mesh(new THREE.SphereGeometry(0.4,14,12), black, 0,1.88,-0.12); hr.scale.set(1,1.3,0.8); g.add(hr); }
+  if (f.hat === 'none' || f.hat === undefined) {
+    g.add(mesh(new THREE.SphereGeometry(0.38,16,10,0,Math.PI*2,0,Math.PI*0.5), black, 0,2.0,-0.01));
+  } else if (f.hat === 'topi') {
+    g.add(mesh(new THREE.CylinderGeometry(0.28,0.34,0.22,14), mat('#f5f5f5'), 0,2.33,0));
+  } else if (f.hat === 'turban') {
+    var tb = mesh(new THREE.SphereGeometry(0.42,14,12), mat('#e0a100'), 0,2.27,0); tb.scale.set(1,0.7,1); g.add(tb);
+  } else if (f.hat === 'cap') {
+    g.add(mesh(new THREE.SphereGeometry(0.38,16,10,0,Math.PI*2,0,Math.PI*0.5), shirt, 0,2.02,0));
+    g.add(mesh(new THREE.BoxGeometry(0.32,0.03,0.26), shirt, 0,2.05,0.38));
+  } else if (f.hat === 'fedora') {
+    g.add(mesh(new THREE.CylinderGeometry(0.62,0.62,0.04,18), black, 0,2.28,0));
+    g.add(mesh(new THREE.CylinderGeometry(0.3,0.34,0.32,16), black, 0,2.44,0));
+    g.add(mesh(new THREE.CylinderGeometry(0.345,0.345,0.07,16), mat('#c7352a'), 0,2.33,0));
+  }
+  if (f.stache) {
+    var st = mesh(new THREE.BoxGeometry(0.3,0.06,0.06), black, 0,1.9,0.35);
+    if (f.big) st.scale.set(1.9,1.4,1);
+    if (f.fake) { st.rotation.z = 0.22; st.position.x = 0.03; }
+    g.add(st);
+  }
+  if (f.glasses) {
+    [-0.14,0.14].forEach(function(x){ g.add(mesh(new THREE.TorusGeometry(0.085,0.015,8,16), mat('#222'), x,2.04,0.34)); });
+    g.add(mesh(new THREE.BoxGeometry(0.08,0.015,0.015), mat('#222'), 0,2.05,0.35));
+  }
+  return g;
+}
+
+function makeLampChar(){
+  var g = new THREE.Group();
+  g.add(mesh(new THREE.CylinderGeometry(0.3,0.36,0.2,12), mat('#3b3b4a'), 0,0.1,0));
+  g.add(mesh(new THREE.CylinderGeometry(0.08,0.1,3.0,10), mat('#3b3b4a'), 0,1.6,0));
+  g.add(mesh(new THREE.SphereGeometry(0.3,14,12), new THREE.MeshBasicMaterial({color:'#ffe9a0'}), 0,3.25,0));
+  g.add(mesh(new THREE.BoxGeometry(0.5,0.34,0.03), mat('#ffffff'), 0,1.6,0.14));
+  g.userData.hop = true; return g;
+}
+
+function makeScarecrow(){
+  var g = new THREE.Group();
+  g.add(mesh(new THREE.CylinderGeometry(0.06,0.06,2.5,8), mat('#6a4a2a'), 0,1.25,0));
+  var arm = mesh(new THREE.CylinderGeometry(0.05,0.05,1.7,8), mat('#6a4a2a'), 0,1.85,0); arm.rotation.z = Math.PI/2; g.add(arm);
+  g.add(mesh(new THREE.BoxGeometry(0.9,0.9,0.3), mat('#b5442f'), 0,1.55,0));
+  g.add(mesh(new THREE.SphereGeometry(0.3,14,12), mat('#d9c28a'), 0,2.35,0));
+  g.add(mesh(new THREE.CylinderGeometry(0.5,0.5,0.03,14), mat('#6a4a2a'), 0,2.6,0));
+  g.add(mesh(new THREE.ConeGeometry(0.3,0.35,12), mat('#6a4a2a'), 0,2.78,0));
+  g.add(mesh(new THREE.BoxGeometry(0.34,0.24,0.03), mat('#ffffff'), 0,1.6,0.17));
+  g.userData.hop = true; return g;
+}
+
+function makeParrot(){
+  var g = new THREE.Group(), green = mat('#2e9d4f');
+  g.add(mesh(new THREE.CylinderGeometry(0.03,0.03,1.2,6), mat('#6a4a2a'), 0,0.0,0));
+  var perch = mesh(new THREE.CylinderGeometry(0.03,0.03,0.7,6), mat('#6a4a2a'), 0,0.6,0); perch.rotation.z = Math.PI/2; g.add(perch);
+  var body = mesh(new THREE.SphereGeometry(0.28,14,12), green, 0,0.95,0); body.scale.set(1,1.25,1); g.add(body);
+  g.add(mesh(new THREE.SphereGeometry(0.2,14,12), green, 0,1.4,0.05));
+  g.add(mesh(new THREE.SphereGeometry(0.045,8,8), mat('#111'), 0.1,1.45,0.2));
+  g.add(mesh(new THREE.SphereGeometry(0.045,8,8), mat('#111'), -0.1,1.45,0.2));
+  var beak = mesh(new THREE.ConeGeometry(0.07,0.18,8), mat('#f4b41a'), 0,1.36,0.27); beak.rotation.x = Math.PI/2; g.add(beak);
+  var wing = mesh(new THREE.SphereGeometry(0.2,10,8), mat('#d63c2f'), 0.24,0.95,0); wing.scale.set(0.35,1,0.7); g.add(wing);
+  var tail = mesh(new THREE.BoxGeometry(0.16,0.5,0.05), mat('#3a66d8'), 0,0.55,-0.18); tail.rotation.x = 0.3; g.add(tail);
+  g.scale.set(1.3,1.3,1.3);
+  return g;
+}
+
+function addLampPost(x,z){
+  var g = new THREE.Group();
+  g.add(mesh(new THREE.CylinderGeometry(0.07,0.09,3.4,8), mat('#3b3b4a'), 0,1.7,0));
+  var bm = new THREE.MeshBasicMaterial({color:'#e8dcae'}); bulbMats.push(bm);
+  g.add(mesh(new THREE.SphereGeometry(0.22,12,10), bm, 0,3.5,0));
+  g.position.set(x,0,z); scene.add(g);
+}
+
+function signTexture(){
+  var c = document.createElement('canvas'); c.width = 512; c.height = 160;
+  var x = c.getContext('2d');
+  x.fillStyle = '#f4b41a'; x.fillRect(0,0,512,160);
+  x.strokeStyle = '#1d1b2e'; x.lineWidth = 8; x.strokeRect(6,6,500,148);
+  x.fillStyle = '#1d1b2e'; x.textAlign = 'center';
+  x.font = '64px "Rozha One", Georgia, serif'; x.fillText('ROLL ROOM', 256, 82);
+  x.font = '600 30px Hind, Arial, sans-serif'; x.fillText('Gadbad Nagar, Part 7', 256, 124);
+  return new THREE.CanvasTexture(c);
+}
+
+var TH = {
+  1:{g:'#9a7b55', sun:'#ffb03a', sy:8.2, hi:0.95, hc:0xfff0d0, hg:0x806a5a, dl:0.8, night:0},
+  2:{g:'#76606b', sun:'#ff7a45', sy:4.2, hi:0.8,  hc:0xffc9a0, hg:0x6a5070, dl:0.6, night:1},
+  3:{g:'#3d3a52', sun:'#f4f0d0', sy:8.6, hi:0.6,  hc:0x9fb0ff, hg:0x3a3560, dl:0.35, night:2}
+};
+
+function buildWorld(){
+  scene = new THREE.Scene();
+  camera = new THREE.PerspectiveCamera(48, 1, 0.1, 200);
+  hemi = new THREE.HemisphereLight(0xfff0d0, 0x806a5a, 0.95); scene.add(hemi);
+  sunL = new THREE.DirectionalLight(0xffe2b0, 0.8); sunL.position.set(5,8,6); scene.add(sunL);
+
+  ground = mesh(new THREE.BoxGeometry(120,0.4,120), mat('#9a7b55'), 0,-0.2,0); scene.add(ground);
+  scene.add(mesh(new THREE.BoxGeometry(120,0.03,5), mat('#4a4560'), 0,0.02,2.5));
+  for (var d=-10; d<=10; d++){ scene.add(mesh(new THREE.BoxGeometry(1,0.04,0.12), mat('#f1e9cf'), d*3,0.04,4.4)); }
+
+  sunM = mesh(new THREE.SphereGeometry(2.6,20,16), new THREE.MeshBasicMaterial({color:'#ffb03a'}), 8,8.2,-42); scene.add(sunM);
+
+  winA = new THREE.MeshBasicMaterial({color:'#9fb8b4'});
+  winB = new THREE.MeshBasicMaterial({color:'#9fb8b4'});
+  var cols = ['#2f6f73','#d63c2f','#f4b41a','#7a3f98','#3a8f6a','#c8541a'];
+  var seed = 7; function rnd(){ seed = (seed*9301+49297)%233280; return seed/233280; }
+  for (var i=-7;i<=7;i++){
+    if (Math.abs(i) < 2) continue;
+    var h = 2 + rnd()*1.3, w = 2.3;
+    var b = mesh(new THREE.BoxGeometry(w,h,2.2), mat(cols[(i+7)%cols.length]), i*2.6,h/2,-10); scene.add(b);
+    scene.add(mesh(new THREE.BoxGeometry(w+0.2,0.2,2.4), mat('#2b2b3a'), i*2.6,h+0.1,-10));
+    for (var k=0;k<2;k++){
+      var wm = ((i+k)%2===0) ? winA : winB;
+      scene.add(mesh(new THREE.PlaneGeometry(0.5,0.6), wm, i*2.6-0.5+k*1.0, h*0.55, -8.88));
+    }
+  }
+  /* Roll Room */
+  scene.add(mesh(new THREE.BoxGeometry(5,3.4,3), mat('#2f6f73'), 0,1.7,-7.5));
+  scene.add(mesh(new THREE.BoxGeometry(5.6,0.3,3.6), mat('#c7352a'), 0,3.55,-7.5));
+  scene.add(mesh(new THREE.BoxGeometry(1,1.8,0.1), mat('#2b2b3a'), 0,0.9,-5.95));
+  var sign = mesh(new THREE.PlaneGeometry(3.6,1.12), new THREE.MeshBasicMaterial({map:signTexture()}), 0,2.55,-5.98); scene.add(sign);
+
+  /* bunting */
+  var pts = [], n = 16, bc = ['#d63c2f','#f4b41a','#2f6f73','#7a3f98'];
+  for (var j=0;j<=n;j++){
+    var bx = -4.5 + j*9/n, by = 3.5 - 0.55*Math.sin(Math.PI*j/n);
+    pts.push(new THREE.Vector3(bx,by,-4));
+    if (j>0 && j<n){ var fl = mesh(new THREE.ConeGeometry(0.16,0.34,3), mat(bc[j%4]), bx,by-0.2,-4); fl.rotation.x = Math.PI; scene.add(fl); }
+  }
+  scene.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints(pts), new THREE.LineBasicMaterial({color:'#1d1b2e'})));
+  [-4.5,4.5].forEach(function(x){ scene.add(mesh(new THREE.CylinderGeometry(0.06,0.08,3.6,8), mat('#3b3b4a'), x,1.8,-4)); });
+
+  /* banyan trees */
+  [[-5.4,-3.5],[5.6,-3.0]].forEach(function(p){
+    var t = new THREE.Group();
+    t.add(mesh(new THREE.CylinderGeometry(0.35,0.5,2.4,10), mat('#5a3d28'), 0,1.2,0));
+    [[0,3.2,0,1.7],[-1.1,2.9,0.3,1.3],[1.1,3.0,-0.2,1.4],[0.3,3.9,0.2,1.2]].forEach(function(c){
+      t.add(mesh(new THREE.SphereGeometry(c[3],12,10), mat('#2f7a3a'), c[0],c[1],c[2]));
+    });
+    [-1.4,-0.7,0.8,1.5].forEach(function(rx){ t.add(mesh(new THREE.CylinderGeometry(0.03,0.04,2.4,5), mat('#5a3d28'), rx,1.5,0.5)); });
+    t.position.set(p[0],0,p[1]); scene.add(t);
+  });
+
+  addLampPost(-2.3,-1.6); addLampPost(6.5,0.2); addLampPost(-7,0.5);
+
+  jimmy = makePerson({skin:'#c58f63', shirt:'#2a2a3d', hat:'fedora', stache:1, big:1});
+  jimmy.userData.baseX = -3.4; jimmy.userData.offX = 0; jimmy.userData.shake = 0;
+  jimmy.position.set(-3.4,0,-1.2); scene.add(jimmy); chars.push(jimmy);
+
+  parrot = makeParrot(); parrot.position.set(2.8,0.1,4.6); scene.add(parrot);
+
+  resize();
+  window.addEventListener('resize', resize);
+  window.addEventListener('pointermove', function(e){ px = e.clientX/window.innerWidth - 0.5; });
+}
+
+function resize(){
+  if (!GL) return;
+  var w = window.innerWidth, h = window.innerHeight, a = w/h, port = a < 0.85;
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio||1, 2));
+  renderer.setSize(w, h, false);
+  camera.aspect = a; camera.fov = port ? 62 : 48;
+  camera.userData.ty = port ? -1.0 : 0.9;
+  camera.updateProjectionMatrix();
+  jimmy.userData.baseX = port ? -2.3 : -3.4;
+  parrot.position.x = port ? 1.25 : 2.8;
+}
+
+/* ---------- stage API ---------- */
+var stage = {
+  setLevel:function(n){
+    if (!GL) return;
+    var t = TH[n];
+    ground.material.color.set(t.g); sunM.material.color.set(t.sun); sunM.position.y = t.sy;
+    hemi.intensity = t.hi; hemi.color.setHex(t.hc); hemi.groundColor.setHex(t.hg); sunL.intensity = t.dl;
+    winA.color.set(t.night ? '#ffd36e' : '#9fb8b4');
+    winB.color.set(t.night===2 ? '#343a66' : (t.night===1 ? '#ffd36e' : '#9fb8b4'));
+    bulbMats.forEach(function(m){ m.color.set(t.night ? '#fff2b0' : '#e8dcae'); });
+  },
+  enter:function(c, cb){
+    if (!GL) { setTimeout(cb, 200); return; }
+    var g = c.kind==='lamp' ? makeLampChar() : (c.kind==='scarecrow' ? makeScarecrow() : makePerson(c.face));
+    g.position.set(8,0,2.5); g.rotation.y = -Math.PI/2; g.userData.walk = true;
+    scene.add(g); chars.push(g); cur3d = g;
+    tween(1.5, function(p){ g.position.x = 8*(1-p); }, function(){
+      g.userData.walk = false; g.position.y = 0;
+      tween(0.25, function(p){ g.rotation.y = -Math.PI/2*(1-p); }, cb);
+    });
+  },
+  exit:function(kind){
+    if (!GL || !cur3d) return;
+    var g = cur3d; cur3d = null;
+    function remove(){ scene.remove(g); var i = chars.indexOf(g); if (i>-1) chars.splice(i,1); }
+    if (kind === 'poof') {
+      tween(0.7, function(p){ g.position.y = Math.sin(p*Math.PI)*1.3; g.rotation.y = p*Math.PI*4; g.scale.setScalar(Math.max(0.02,1-p*0.97)); }, remove);
+    } else {
+      g.rotation.y = -Math.PI/2; g.userData.walk = true;
+      var x0 = g.position.x;
+      tween(1.3, function(p){ g.position.x = x0 - 9*p; }, remove);
+    }
+  },
+  jimmyReset:function(){ if(!GL) return; jimmy.visible = true; jimmy.userData.offX = 0; jimmy.userData.walk = false; jimmy.position.y = 0; },
+  jimmyCatch:function(){ if(!GL) return; tween(0.6, function(p){ jimmy.userData.shake = Math.sin(p*Math.PI*8)*0.25*(1-p); }, function(){ jimmy.userData.shake = 0; }); },
+  jimmyWin:function(){ if(!GL) return; tween(0.9, function(p){ jimmy.position.y = Math.abs(Math.sin(p*Math.PI*3))*0.8; jimmy.rotation.z = Math.sin(p*Math.PI*6)*0.15; }, function(){ jimmy.position.y = 0; jimmy.rotation.z = 0; }); },
+  jimmyFlee:function(){ if(!GL) return; jimmy.userData.walk = true; tween(2.2, function(p){ jimmy.userData.offX = -12*p; }, function(){ jimmy.userData.walk = false; jimmy.visible = false; }); },
+  hop:function(){ if(!GL) return; tween(0.5, function(p){ parrot.position.y = 0.1 + Math.sin(p*Math.PI)*0.6; }, function(){ parrot.position.y = 0.1; }); }
+};
+
+/* ---------- main loop ---------- */
+var last = performance.now();
+function loop(now){
+  requestAnimationFrame(loop);
+  var dt = Math.min((now-last)/1000, 0.1); last = now; time += dt;
+
+  for (var i=tweens.length-1; i>=0; i--){
+    var tw = tweens[i]; tw.t += dt;
+    var p = Math.min(tw.t/tw.dur, 1);
+    tw.fn(ease(p));
+    if (p >= 1){ tweens.splice(i,1); if (tw.done) tw.done(); }
+  }
+
+  if (S.timerOn){
+    S.tLeft -= dt;
+    var cap = LEVELS[S.lvl].timer;
+    var fill = $('timerFill');
+    fill.style.width = Math.max(0, S.tLeft/cap*100) + '%';
+    fill.className = S.tLeft < 5 ? 'low' : '';
+    if (S.tLeft <= 0){ S.tLeft = 0; decide('timeout'); }
+  }
+
+  if (!GL) return;
+  chars.forEach(function(g){
+    var legs = g.userData.legs;
+    if (g.userData.walk){
+      if (legs){ legs[0].rotation.x = Math.sin(time*10)*0.6; legs[1].rotation.x = -Math.sin(time*10)*0.6; g.position.y = Math.abs(Math.sin(time*10))*0.06; }
+      else if (g.userData.hop){ g.position.y = Math.abs(Math.sin(time*8))*0.25; }
+    } else if (legs){ legs[0].rotation.x *= 0.8; legs[1].rotation.x *= 0.8; }
+  });
+  jimmy.position.x = jimmy.userData.baseX + jimmy.userData.offX + jimmy.userData.shake;
+  if (!jimmy.userData.walk && !RM) jimmy.rotation.y = Math.sin(time*1.1)*0.3 + 0.35;
+  else if (jimmy.userData.walk) jimmy.rotation.y = -Math.PI/2;
+  if (!RM) parrot.rotation.z = Math.sin(time*2)*0.04;
+
+  var sway = RM ? 0 : (Math.sin(time*0.3)*0.25 + px*0.6);
+  camera.position.set(sway, 2.2, 9);
+  camera.lookAt(0, camera.userData.ty, 0);
+  renderer.render(scene, camera);
+}
+
+/* ---------- face SVG ---------- */
+function faceSVG(c){
+  var o = '<svg viewBox="0 0 80 80" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">';
+  if (c.kind === 'lamp'){
+    o += '<rect width="80" height="80" fill="#cfe3e0"/><rect x="37" y="30" width="6" height="50" fill="#3b3b4a"/>' +
+         '<circle cx="40" cy="24" r="14" fill="#ffe9a0" stroke="#e0a100" stroke-width="2"/>' +
+         '<path d="M22 24 L16 22 M58 24 L64 22 M40 6 L40 1" stroke="#e0a100" stroke-width="2" fill="none"/>';
+  } else if (c.kind === 'scarecrow'){
+    o += '<rect width="80" height="80" fill="#e8d8a8"/><rect x="38" y="30" width="4" height="50" fill="#6a4a2a"/>' +
+         '<rect x="10" y="40" width="60" height="4" fill="#6a4a2a"/><rect x="26" y="42" width="28" height="26" fill="#b5442f"/>' +
+         '<circle cx="40" cy="28" r="13" fill="#d9c28a"/><path d="M22 20 L40 4 L58 20 Z" fill="#6a4a2a"/><rect x="20" y="18" width="40" height="4" fill="#6a4a2a"/>' +
+         '<circle cx="35" cy="28" r="1.8" fill="#161616"/><circle cx="45" cy="28" r="1.8" fill="#161616"/>';
+  } else {
+    var f = c.face;
+    o += '<rect width="80" height="80" fill="#cfe3e0"/>';
+    if (f.long) o += '<ellipse cx="40" cy="40" rx="20" ry="26" fill="#161616"/>';
+    o += '<path d="M8 80 Q10 58 40 56 Q70 58 72 80 Z" fill="' + f.shirt + '"/>' +
+         '<rect x="34" y="48" width="12" height="10" fill="' + f.skin + '"/>' +
+         '<circle cx="40" cy="36" r="16" fill="' + f.skin + '"/>';
+    if (!f.hat || f.hat === 'none') o += '<path d="M24 34 Q24 16 40 16 Q56 16 56 34 Q48 24 40 24 Q32 24 24 34Z" fill="#161616"/>';
+    else if (f.hat === 'topi') o += '<path d="M25 28 L27 16 Q40 12 53 16 L55 28 Q40 23 25 28Z" fill="#f5f5f5" stroke="#999" stroke-width="1"/>';
+    else if (f.hat === 'turban') o += '<ellipse cx="40" cy="22" rx="19" ry="11" fill="#e0a100" stroke="#a87800" stroke-width="1.5"/>';
+    else if (f.hat === 'cap') o += '<path d="M24 30 Q26 12 40 12 Q54 12 56 30Z" fill="' + f.shirt + '"/><rect x="40" y="28" width="22" height="4" rx="2" fill="' + f.shirt + '"/>';
+    o += '<circle cx="34" cy="36" r="1.8" fill="#161616"/><circle cx="46" cy="36" r="1.8" fill="#161616"/>';
+    if (f.stache) o += '<rect x="32" y="43" width="16" height="3.5" rx="1.5" fill="#161616"' + (f.fake ? ' transform="rotate(12 40 44)"' : '') + '/>';
+    if (f.glasses) o += '<circle cx="34" cy="36" r="5.5" fill="none" stroke="#222" stroke-width="1.5"/><circle cx="46" cy="36" r="5.5" fill="none" stroke="#222" stroke-width="1.5"/><line x1="39.5" y1="36" x2="40.5" y2="36" stroke="#222" stroke-width="1.5"/>';
+  }
+  return o + '</svg>';
+}
+
+function cardHTML(c){
+  return '<div class="idcard"><div class="idhead">Gadbad Nagar Electoral Roll, Part 7</div>' +
+    '<div class="photo">' + faceSVG(c) + '</div>' +
+    '<dl><dt>Name</dt><dd>' + c.n + '</dd><dt>Relative</dt><dd>' + c.f + '</dd><dt>Age</dt><dd>' + c.age + '</dd>' +
+    '<dt>Address</dt><dd>' + c.addr + '</dd><dt>Roll no.</dt><dd>' + c.no + '</dd></dl>' +
+    '<p class="note"><b>Officer\u2019s note:</b> ' + cf(c, 'note') + '</p></div>';
+}
+
+/* ---------- UI helpers ---------- */
+var totaT = null, jimT = null;
+function say(t){ var e = $('tota'); e.innerHTML = '<b>Tota</b>' + t; e.hidden = false; stage.hop(); clearTimeout(totaT); totaT = setTimeout(function(){ e.hidden = true; }, 6000); }
+function jimSay(t, x){ var e = $('jim'); e.innerHTML = '<b>Jimmy</b>' + t + (x ? '<br><small>' + x + '</small>' : ''); e.hidden = false; clearTimeout(jimT); jimT = setTimeout(function(){ e.hidden = true; }, 4500); }
+
+function updateHUD(){
+  $('rank').textContent = rankFor(S.score);
+  $('lvl').textContent = (S.mode === 'daily') ? 'Daily case file' : ((S.mode === 'matdaan') ? 'Matdaan Day' : 'Level ' + (S.lvl+1) + ' of 3');
+  $('score').textContent = S.score;
+  $('streak').textContent = 'Streak ' + S.combo;
+  var p = '';
+  for (var i=0;i<5;i++) p += '<i class="' + (i < S.rep ? 'on' : '') + '"></i>';
+  $('pips').innerHTML = p; $('pips').setAttribute('aria-label', 'Reputation ' + S.rep + ' of 5');
+}
+
+function showModal(html, after){
+  var m = $('modal'); m.innerHTML = '<div class="sheet" role="dialog" aria-modal="true">' + html + '</div>';
+  m.classList.add('show');
+  var b = m.querySelector('.primary'); if (b) b.focus();
+  if (after) after(m);
+}
+function hideModal(){ $('modal').classList.remove('show'); $('modal').innerHTML = ''; }
+
+function renderLedger(){
+  var ul = $('ledger'), html = '';
+  S.ledger.forEach(function(c){
+    html += '<li><div style="width:30px;height:30px;flex:none">' + faceSVG(c).replace('<svg ', '<svg width="30" height="30" ') + '</div><div><b>' + c.n + '</b> <span>' + c.f + ', age ' + c.age + '</span></div></li>';
+  });
+  ul.innerHTML = html || '<li><span>Nobody yet. Clear a genuine voter and they show up here.</span></li>';
+  $('ledgerBtn').textContent = 'Roll so far (' + S.ledger.length + ')';
+}
+
+/* ---------- game flow ---------- */
+function startGame(){
+  LEVELS = STORY; S.mode = 'story'; stage.clearLineup();
+  S.score = 0; S.rep = 5; S.combo = 0; S.caught = 0; S.total = 0; S.correctAll = 0;
+  startLevel(0);
+}
+
+function startLevel(i){
+  S.lvl = i; S.idx = 0; S.ledger = []; S.lvlCorrect = 0; S.lvlJCaught = 0; S.locked = true;
+  S.lvlJ = LEVELS[i].cases.filter(function(c){ return c.j; }).length;
+  document.body.className = 'l' + (i+1);
+  stage.setLevel(i+1); stage.jimmyReset(); stage.disguise(S.mode === 'daily' ? 3 : S.lvl*2); updateHUD(); renderLedger();
+  var L = LEVELS[i];
+  showModal('<h2>' + (S.mode === 'daily' ? '' : 'Level ' + (i+1) + ' of 3: ') + L.title + '</h2><p>' + L.intro + '</p><blockquote>' + L.jimmy + '<br><small>Jugaadu Jimmy, your best friend</small></blockquote><button class="primary" id="go">Open the roll</button>',
+    function(){ $('go').onclick = function(){ hideModal(); jimSay(L.jimmy); nextCase(); }; });
+}
+
+function nextCase(){
+  $('result').classList.remove('show');
+  var L = LEVELS[S.lvl], c = L.cases[S.idx];
+  S.cur = c; S.locked = true; S.timerOn = false;
+  stage.enter(c, function(){
+    $('caseno').textContent = 'Voter ' + (S.idx+1) + ' of ' + L.cases.length;
+    $('card').innerHTML = cardHTML(c);
+    renderLedger();
+    $('ledger').hidden = true; $('ledgerBtn').setAttribute('aria-expanded','false');
+    $('timer').className = L.timer ? 'on' : '';
+    $('timerFill').style.width = '100%'; $('timerFill').className = '';
+    $('panel').classList.add('show');
+    S.locked = false;
+    if (L.timer){ S.tLeft = L.timer; S.timerOn = true; }
+  });
+}
+
+function decide(choice){
+  if (S.locked) return;
+  S.locked = true; S.timerOn = false;
+  var c = S.cur, right = (choice === c.t), isFlag = (choice !== 'ok' && choice !== 'timeout');
+  $('panel').classList.remove('show');
+  if (right && isFlag) openStamp(c, function(bonus){ finish(choice, right, bonus); });
+  else finish(choice, right, 0);
+}
+
+function finish(choice, right, bonus){
+  var c = S.cur, L = LEVELS[S.lvl], pts = 0, loss = 0, head = '';
+  S.total++;
+  if (right){
+    S.combo = Math.min(S.combo+1, 6);
+    var tb = L.timer ? Math.round(S.tLeft*4) : 0;
+    pts = 100 + (S.combo-1)*10 + bonus + tb;
+    S.score += pts; S.lvlCorrect++; S.correctAll++;
+    head = (choice === 'ok') ? 'Cleared. Correct!' : 'Caught it!';
+    if (c.j){ S.lvlJCaught++; S.caught++; sfx.catchj(); stage.jimmyCatch(); statCatch(); jimSay(pick(CATCH), 'New disguise: ' + stage.disguise((S.mode === 'daily' ? 3 : S.lvl*2) + S.lvlJCaught)); }
+    stage.exit(choice === 'ok' ? 'walk' : 'poof');
+    sfx.good(); say(pick(choice === 'ok' ? TOTA_OK : TOTA_GOOD));
+  } else {
+    S.combo = 0;
+    sfx.bad(); if (choice === 'timeout'){ head = 'Time is up!'; loss = 1; say('Squawk! The clock won that round.'); stage.exit('walk'); }
+    else if (choice === 'ok'){ head = 'That one slipped through.'; loss = 1; stage.exit('walk'); say(pick(TOTA_BAD)); if (c.j){ sfx.jimmy(); stage.jimmyWin(); jimSay(pick(WIN)); } }
+    else if (c.t === 'ok'){ head = 'You flagged a real voter.'; loss = 1; stage.exit('walk'); say('You just flagged a real voter. Squawk of shame.'); }
+    else { head = 'Right instinct, wrong flag.'; stage.exit('walk'); say(pick(TOTA_BAD)); }
+  }
+  S.rep = Math.max(0, S.rep - loss); awardCheck();
+  updateHUD();
+  if (choice === 'ok' || choice === 'dup' || choice === 'timeout' || true){
+    if (c.t === 'ok' || c.t === 'dead' || c.t === 'addr') S.ledger.push(c);
+  }
+
+  var tally = '';
+  if (right){
+    tally = '+' + pts + ' points' + (bonus ? ' (stamp bonus +' + bonus + ')' : '') + (L.timer ? ', speed bonus included' : '');
+    if (choice !== 'ok') tally = 'Form ' + FORM[c.t] + ' filed. ' + tally;
+  }
+  if (loss) tally += (tally ? ' ' : '') + 'Reputation \u22121.';
+  var intro = right ? '' : '<p><b>This one was ' + LABEL[c.t] + '.</b></p>';
+  var last = (S.idx >= L.cases.length - 1) || S.rep <= 0;
+  $('result').innerHTML = '<h3 class="' + (right ? 'good' : 'bad') + '">' + head + '</h3>' + intro +
+    '<p>' + cf(c, 'line') + '</p><p class="fact"><b>In real life:</b> ' + cf(c, 'fact') + '</p>' +
+    (tally ? '<p class="tally">' + tally + '</p>' : '') +
+    '<button class="primary" id="nextBtn">' + (last ? 'See results' : 'Next voter') + '</button>';
+  $('result').classList.add('show');
+  var nb = $('nextBtn'); nb.focus();
+  nb.onclick = function(){
+    $('result').classList.remove('show');
+    if (S.rep <= 0) return endGame(false);
+    S.idx++;
+    if (S.idx >= L.cases.length) return endLevel();
+    nextCase();
+  };
+}
+
+/* ---------- stamp mini-game ---------- */
+function openStamp(c, cb){
+  var n = FORM[c.t], el = $('stamp');
+  el.innerHTML = '<div class="sheet" role="dialog" aria-modal="true"><h3>File Form ' + n + '</h3><p><span>' + FORMTXT[n] + '</span>' +
+    ' <span>Tap Stamp when the red marker is over the dark green zone.</span></p>' +
+    '<div class="track"><div class="zone2"></div><div class="zone"></div><div class="mark" id="mark"></div></div>' +
+    '<p class="stampmsg" id="stampMsg" aria-live="polite"></p><button class="primary" id="stampBtn">Stamp</button></div>';
+  el.classList.add('show');
+  var mark = $('mark'), pos = 0, t0 = performance.now(), raf = 0, done = false, speed = RM ? 2.0 : 3.4;
+  function tick(now){ pos = (Math.sin((now-t0)/1000*speed - Math.PI/2) + 1)/2; mark.style.left = (pos*100) + '%'; raf = requestAnimationFrame(tick); }
+  raf = requestAnimationFrame(tick);
+  var btn = $('stampBtn'); btn.focus();
+  btn.onclick = function(){
+    if (done) return; done = true; cancelAnimationFrame(raf); sfx.stamp();
+    var d = Math.abs(pos - 0.5), b = d < 0.1 ? 50 : (d < 0.22 ? 25 : 0);
+    $('stampMsg').textContent = b === 50 ? 'Perfect stamp! +50' : (b === 25 ? 'Good stamp. +25' : 'Smudged. No bonus.');
+    setTimeout(function(){ el.classList.remove('show'); el.innerHTML = ''; cb(b); }, 700);
+  };
+}
+
+/* ---------- level and game end ---------- */
+function endLevel(){
+  var L = LEVELS[S.lvl], allJ = (S.lvlJCaught === S.lvlJ);
+  if (allJ){ sfx.win(); stage.jimmyFlee(); jimSay('I will be back, Inspector!'); } else { stage.jimmyWin(); jimSay(pick(WIN)); }
+  var isLast = (S.lvl === LEVELS.length - 1);
+  var html = '<h2>' + (S.mode === 'daily' ? 'Daily case filed' : 'Level ' + (S.lvl+1) + ' complete') + '</h2><p>' +
+    (allJ ? 'You caught every one of Jimmy\u2019s plants. He is running out of town.' : 'Some of Jimmy\u2019s names are still on the roll. He is dancing about it.') + '</p>' +
+    '<div class="stats"><div><b>' + S.lvlCorrect + ' of ' + L.cases.length + '</b>correct calls</div><div><b>' + S.lvlJCaught + ' of ' + S.lvlJ + '</b>Jimmy plants caught</div>' +
+    '<div><b>' + S.score + '</b>score</div><div><b>' + S.rep + ' of 5</b>reputation left</div></div>' +
+    '<button class="primary" id="go">' + (isLast ? 'See final result' : 'Next level') + '</button>';
+  showModal(html, function(){ $('go').onclick = function(){ hideModal(); if (isLast) endGame(true); else startLevel(S.lvl+1); }; });
+}
+
+function endGame(win){
+  if (S.mode === 'daily') return endDaily(win);
+  $('panel').classList.remove('show'); S.timerOn = false;
+  var rank = rankFor(S.score), best = S.score; statStory();
+  try { var b = parseInt(localStorage.getItem('vld-best') || '0', 10); if (S.score > b) localStorage.setItem('vld-best', String(S.score)); best = Math.max(b, S.score); } catch(e){}
+  var share = 'I scored ' + S.score + ' in Voter List Detective: Gadbad Nagar. Rank: ' + rank + '. I caught ' + S.caught + ' of Jimmy\u2019s fake entries. Can you do better?';
+  var html = '<h2>' + (win ? 'Case closed' : 'Jimmy wins this round') + '</h2><p>' +
+    (win ? 'The roll is clean. Gadbad Nagar can finally vote in peace.' : 'Your reputation ran out. Wrongly flagging real voters and missing fake ones both cost you the badge. Try again.') + '</p>' +
+    '<div class="stats"><div><b>' + rank + '</b>your rank</div><div><b>' + S.score + '</b>score (best ' + best + ')</div></div>' +
+    '<div class="legend"><span class="a">Form 7: object to an entry</span><span class="b">Form 8: correct or change address</span><span class="c">Form 6: new voter</span></div>' +
+    '<p class="small">A made-up town and made-up people, based on how the real roll process works. For real changes to the roll, use the official Election Commission portal or your local election office.</p>' +
+    '<p class="sharebox" id="shareText">' + share + '</p>' +
+    '<button class="primary" id="copyBtn">Copy my result</button>' + (win ? '<button class="secondary" id="mday2">Go to Matdaan Day</button>' : '') + '<button class="secondary" id="again">Play again</button>';
+  showModal(html, function(){
+    $('again').onclick = function(){ hideModal(); startGame(); };
+    if ($('mday2')) $('mday2').onclick = function(){ hideModal(); startMatdaan(); };
+    $('copyBtn').onclick = function(){
+      var btn = $('copyBtn');
+      try { navigator.clipboard.writeText(share).then(function(){ btn.textContent = 'Copied!'; }, function(){ btn.textContent = 'Select the text above to copy'; }); }
+      catch(e){ btn.textContent = 'Select the text above to copy'; }
+    };
+  });
+}
+
+/* ---------- lineup (Matdaan Day) ---------- */
+var lineup = [];
+stage.lineup = function(faces){
+  if (!GL) return;
+  stage.clearLineup();
+  var port = (window.innerWidth/window.innerHeight) < 0.85, gap = port ? 0.8 : 1.7, sc = port ? 0.72 : 1, n = faces.length;
+  faces.forEach(function(f, i){
+    var g = makePerson(f); g.userData.sc = sc; g.scale.setScalar(sc);
+    g.position.set(-(n-1)*gap/2 + i*gap, 0, 2.5); scene.add(g); lineup.push(g);
+  });
+};
+stage.clearLineup = function(){ if (!GL) return; lineup.forEach(function(g){ scene.remove(g); }); lineup = []; };
+stage.pickCand = function(i){
+  if (!GL || !lineup[i]) return; var g = lineup[i];
+  tween(0.5, function(p){ g.position.y = Math.sin(p*Math.PI)*0.6; }, function(){ g.position.y = 0; });
+};
+stage.markCand = function(i){ if (!GL) return; lineup.forEach(function(g, j){ g.scale.setScalar(g.userData.sc * (j === i ? 1.2 : 1)); }); };
+
+/* ---------- daily case file ---------- */
+var DAILY_J = [
+  [{n:'Gulab Chand', f:'S/o Late Hari Chand', age:99, addr:'6, Garden Road', no:'GN-2041',
+    note:'Family says he passed away years ago. His bench in the park is now a memorial.', t:'dead', j:1, face:F(3,'#b0b0b0','topi',{stache:1}),
+    line:'Gone from the park, still on the roll. Jimmy was counting on nobody visiting the bench.',
+    fact:'A death certificate helps an officer verify a Form 7 objection to a deceased voter\u2019s entry.'}],
+  [{n:'Kheti Lal', f:'S/o Mausam Lal', age:60, addr:'Field No. 9', no:'GN-2088',
+    note:'Stands in the rain without complaint. Has never asked for a day off.', t:'ghost', j:1, kind:'scarecrow',
+    line:'Another scarecrow with a voter card. Hard-working, but not a voter.',
+    fact:'Ghost entries have no real person behind them. They are objected to with Form 7.'}],
+  [{n:'Jyoti Stambh', f:'D/o Municipal Corporation', age:'60 (watts)', addr:'Pole No. 7, Market Chowk', no:'GN-2107',
+    note:'Glows brightly at night. Has never once queued.', t:'ghost', j:1, kind:'lamp',
+    line:'Another lamp post with a voter card. Jimmy has a type.',
+    fact:'Field verification checks that the people on the roll actually exist.'}],
+  [{n:'Kiran Sethi', f:'S/o Mohan Sethi', age:40, addr:'8, Park Avenue', no:'GN-2290',
+    note:'Reads the newspaper standing up. Always.', t:'ok', face:F(2,'#3a8f6a','none',{stache:1}),
+    line:'A genuine voter. Remember the face.',
+    fact:'Photos and relatives\u2019 names are your best clues for spotting duplicates.'},
+   {n:'Kiran Sethi', f:'S/o Mohan Sethi', age:40, addr:'8-A, Park Avenue', no:'GN-2711',
+    note:'A cap has appeared. The moustache is exactly the same.', t:'dup', j:1, face:F(2,'#3a8f6a','cap',{stache:1}),
+    line:'Same face, same father, an extra letter on the address and a new cap. Jimmy tried.',
+    fact:'One person, one entry. Duplicate entries are objected to with Form 7.'}]
+];
+var DAILY_HON = [
+  [{n:'Nisha Rao', f:'D/o Prabhakar Rao', age:33, addr:'Ward 2, Behind the Old Cinema Hall', no:'GN-2150',
+    note:'The cinema closed in 2019. She lives two kilometres away now and misses the popcorn.', t:'addr', face:F(1,'#c2185b','none',{long:1}),
+    line:'Honest address mix-up. The cinema is gone, the entry stayed.',
+    fact:'Moved within the same constituency? Form 8 updates your address.'}],
+  [{n:'Harpreet Gill', f:'S/o Jaspal Gill', age:27, addr:'Room 12, Old Students Hostel', no:'GN-2166',
+    note:'Graduated, left the hostel, and now rents a flat nearby. The roll has not caught up.', t:'addr', face:F(2,'#3a66d8','cap'),
+    line:'He moved on, the roll did not. Paperwork, not villainy.',
+    fact:'Moving house makes roll entries go stale. Form 8 fixes it within a constituency.'}],
+  [{n:'Rohan Das', f:'S/o Subir Das', age:26, addr:'3, Bridge Street', no:'\u2014',
+    note:'Moved here from another city for a job. Brought a plant.', t:'new', face:F(1,'#556b2f','none'),
+    line:'New to town and not on this roll yet. The plant is thriving.',
+    fact:'Moving to a different constituency means filing Form 6 where you now live.'}],
+  [{n:'Ishita Rane', f:'D/o Mukund Rane', age:18, addr:'14, Orchard Lane', no:'\u2014',
+    note:'Just turned 18. Already practising her inked-finger selfie.', t:'new', face:F(0,'#d63c2f','none',{long:1}),
+    line:'Eligible, excited and not on the roll yet. Form 6 time.',
+    fact:'Form 6 can be filed online, so there is no need to queue at an office.'}]
+];
+var DAILY_OK = [
+  [{n:'Zoya Ansari', f:'D/o Rashid Ansari', age:22, addr:'27, College Road', no:'GN-2201',
+    note:'Registered on her 18th birthday and tells everyone.', t:'ok', face:F(1,'#7a3f98','none',{long:1}),
+    line:'Registered, present and proud. Cleared.',
+    fact:'Registered voters can check their name on the roll online before polling day.'}],
+  [{n:'Dr. Prakash Iyengar', f:'S/o Late Raghavan Iyengar', age:71, addr:'4, Doctors Lane', no:'GN-2230',
+    note:'Nine degrees listed on the card. Only one voter.', t:'ok', face:F(2,'#e8e0c8','none',{glasses:1,stache:1}),
+    line:'A lot of letters after the name, but still just one voter.',
+    fact:'Titles and degrees do not make a duplicate. Check relatives, age and photo.'}],
+  [{n:'Priya Nair', f:'D/o Suresh Nair', age:29, addr:'5, Temple Street', no:'GN-2250',
+    note:'Has a twin sister. Will tell you about it unprompted.', t:'ok', face:F(1,'#e0457b','none',{long:1}),
+    line:'Genuine. Her twin is coming up next.',
+    fact:'Twins share many details. Look at the photos before flagging.'},
+   {n:'Riya Nair', f:'D/o Suresh Nair', age:29, addr:'5, Temple Street', no:'GN-2251',
+    note:'Twin of Priya. They finish each other\u2019s sentences and arguments.', t:'ok', face:F(1,'#3a66d8','cap',{long:1}),
+    line:'Twins, not a duplicate. Different photo, different person.',
+    fact:'Same address, same father and same age can still be two real people.'}]
+];
+
+function keyOf(d){ return d.getFullYear() + '-' + ('0' + (d.getMonth()+1)).slice(-2) + '-' + ('0' + d.getDate()).slice(-2); }
+function seedFrom(str){ var h = 2166136261; for (var i=0;i<str.length;i++){ h ^= str.charCodeAt(i); h = Math.imul(h, 16777619); } return h >>> 0; }
+function rng(a){ return function(){ a |= 0; a = a + 0x6D2B79F5 | 0; var t = Math.imul(a ^ a >>> 15, 1 | a); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
+function shuffled(arr, r){ var a = arr.slice(); for (var i=a.length-1;i>0;i--){ var j = Math.floor(r()*(i+1)), t = a[i]; a[i] = a[j]; a[j] = t; } return a; }
+
+function buildDaily(){
+  var key = keyOf(new Date()), r = rng(seedFrom(key));
+  var sets = shuffled(DAILY_J, r).slice(0,2).concat(shuffled(DAILY_HON, r).slice(0,1), shuffled(DAILY_OK, r).slice(0,2));
+  sets = shuffled(sets, r);
+  var cases = []; sets.forEach(function(s){ cases = cases.concat(s); });
+  return { title:'Daily Case File, ' + key, timer:0,
+    intro:'Everyone gets the same voters today. Catch Jimmy\u2019s fakes, spare the genuine ones, and keep your streak alive.',
+    jimmy:'A fresh day, a fresh disguise. Trust me, yaar.', cases:cases };
+}
+
+function startDaily(){
+  LEVELS = [buildDaily()]; S.mode = 'daily';
+  S.score = 0; S.rep = 5; S.combo = 0; S.caught = 0; S.total = 0; S.correctAll = 0;
+  stage.clearLineup(); startLevel(0);
+}
+
+function endDaily(win){
+  $('panel').classList.remove('show'); S.timerOn = false;
+  var now = new Date(), key = keyOf(now), y = new Date(now.getTime()); y.setDate(y.getDate()-1);
+  var rec = {last:'', streak:0, best:0};
+  try { rec = JSON.parse(localStorage.getItem('vld-daily') || 'null') || rec; } catch(e){}
+  if (win && rec.last !== key){ rec.streak = (rec.last === keyOf(y)) ? (rec.streak||0) + 1 : 1; rec.last = key; }
+  rec.best = Math.max(rec.best || 0, S.score); statDaily(rec.streak || 0);
+  try { localStorage.setItem('vld-daily', JSON.stringify(rec)); } catch(e){}
+  var rank = rankFor(S.score);
+  var share = 'Voter List Detective daily ' + key + ': ' + S.score + ' points, rank ' + rank + (rec.streak ? ', ' + rec.streak + '-day streak' : '') + '. Can you beat it?';
+  var html = '<h2>' + (win ? 'Daily case closed' : 'Jimmy won today') + '</h2><p>' +
+    (win ? 'Today\u2019s roll is clean. Come back tomorrow for a new case file.' : 'Your reputation ran out. Replay today\u2019s file, it is the same for everyone.') + '</p>' +
+    '<div class="stats"><div><b>' + S.score + '</b>score (best ' + rec.best + ')</div><div><b>' + (rec.streak || 0) + '</b>day streak</div></div>' +
+    '<p class="sharebox">' + share + '</p>' +
+    '<button class="primary" id="copyBtn">Copy my result</button><button class="secondary" id="replay">Replay today\u2019s file</button><button class="secondary" id="home">Back to title</button>';
+  showModal(html, function(){
+    $('copyBtn').onclick = function(){
+      var btn = $('copyBtn');
+      try { navigator.clipboard.writeText(share).then(function(){ btn.textContent = 'Copied!'; }, function(){ btn.textContent = 'Select the text above to copy'; }); }
+      catch(e){ btn.textContent = 'Select the text above to copy'; }
+    };
+    $('replay').onclick = function(){ hideModal(); startDaily(); };
+    $('home').onclick = function(){ hideModal(); S.mode = 'story'; LEVELS = STORY; updateHUD(); showTitle(); };
+  });
+}
+
+/* ---------- Matdaan Day ---------- */
+function P(say, real, later){ return {say:say, real:real, later:later}; }
+var ISSUES = [
+  {k:'water', h:'Water', q:'Taps in Gadbad Nagar run only on Tuesdays.'},
+  {k:'roads', h:'Roads', q:'The main road has more craters than the moon.'},
+  {k:'jobs', h:'Jobs', q:'Half the town\u2019s graduates are \u201Cbetween opportunities\u201D.'},
+  {k:'schools', h:'Schools', q:'The school roof leaks, and so does the staff room gossip.'}
+];
+var CANDS = [
+  {name:'Chintu', tag:'Tea-stall owner', slogan:'I will leave everything for the country, except my tea.', face:F(2,'#e0a100','none',{stache:1}), p:{
+    water:P('Free boiled water at every tea stall in town.', 3, 'Tea stalls got safe water. Homes still waited for pipes. Great chai, patchy plumbing.'),
+    roads:P('Every pothole gets filled, with a tea break between each one.', 3, 'Roads improved slowly, one break at a time. Traffic learned patience.'),
+    jobs:P('Every youth gets a tea stall and a business plan.', 2, 'Gadbad Nagar now has 900 tea stalls and 12 customers. Brave, but demand is a thing.'),
+    schools:P('Free tea and biscuits in every school.', 2, 'Attendance rose at biscuit time. Marks stayed the same. The roof still leaked.')}},
+  {name:'Advocate Arguelal', tag:'Lawyer', slogan:'I leave the country in good hands, pending appeal.', face:F(1,'#1d1b2e','none',{glasses:1}), p:{
+    water:P('Every leaking pipe will be taken to court.', 2, 'Forty-one hearings later the pipes still leak, but the leaks are now fully documented.'),
+    roads:P('I object to this road. Sustained. Then overruled.', 2, 'Every contractor was sued and none worked. The craters became a heritage site.'),
+    jobs:P('Everyone gets a job in the legal system.', 1, 'The courts hired nobody. The case backlog hired everyone\u2019s patience.'),
+    schools:P('Students will learn to argue. Teachers will object.', 2, 'Debate scores soared and classes ran long. Nobody agrees on the syllabus yet.')}},
+  {name:'Dr. PhD Prasad', tag:'Professor', slogan:'I will leave a 400-page report for the country. Nobody will read it.', face:F(2,'#7a3f98','cap',{glasses:1}), p:{
+    water:P('A synergistic hydro-governance framework. Water is a stakeholder.', 3, 'A superb 400-page water report arrived. Taps still ran on Tuesdays.'),
+    roads:P('Evidence-based asphalt optimisation, peer reviewed.', 4, 'Roads were surveyed and the best asphalt chosen. Half the budget went on the survey, but the roads are improving.'),
+    jobs:P('A skill ecosystem leveraging cross-sector synergies.', 4, 'Training centres opened and some students found work. The brochure beat the placement rate, but both rose.'),
+    schools:P('Smart classrooms with PhD-level pedagogy.', 3, 'New smart boards arrived. Teachers needed training, training needed budget, and half the boards stayed off.')}},
+  {name:'Uncle-ji', tag:'Retired clerk', slogan:'I will leave my pension for the country. Please do not ask.', face:F(3,'#e8e0c8','topi',{stache:1}), p:{
+    water:P('Wells worked fine in my time. We will revive the wells.', 2, 'Three wells revived and forty thousand people stayed thirsty. Nostalgia is not a water supply.'),
+    roads:P('Roads should be wide like my morning walks. No speed breakers.', 2, 'Wide roads came, and so did very fast scooters. Fewer potholes, more honking.'),
+    jobs:P('Jobs were easy in my time. Just ask uncle.', 2, 'Recommendations ruled the town and qualified people stayed on waiting lists.'),
+    schools:P('Strict discipline and no phones, like in my time.', 3, 'Order improved and curiosity took a hit. Rulers are back, and so is homework.')}},
+  {name:'Inaya', tag:'Influencer', slogan:'I will leave a link in my bio for the country.', face:F(1,'#e0457b','none',{long:1}), p:{
+    water:P('Pipes will be fixed, but only the photogenic ones.', 2, 'The main street got glossy new pipes. The back lanes got a hashtag.'),
+    roads:P('Potholes will be made Instagram-worthy.', 1, 'Potholes now have filters. Vehicles still have bad suspension.'),
+    jobs:P('Every youth becomes an influencer.', 1, 'Everyone has followers and nobody has income. Algorithms are not employers.'),
+    schools:P('School uniforms get a stylish redesign.', 1, 'The uniforms look great. The roof still leaks, but now stylishly.')}}
+];
+var jimmyOffered = false, voteState = {issue:0, sel:-1};
+
+function meterHTML(n){ var h = '', hs = [6,9,12,15,18]; for (var i=0;i<5;i++) h += '<i class="' + (i < n ? 'on' : '') + '" style="height:' + hs[i] + 'px"></i>'; return h; }
+
+function startMatdaan(){
+  LEVELS = STORY; S.mode = 'matdaan'; S.timerOn = false; S.locked = true;
+  ['panel','result','vote'].forEach(function(id){ $(id).classList.remove('show'); });
+  document.body.className = 'l1'; stage.setLevel(1); stage.jimmyReset(); updateHUD();
+  stage.lineup(CANDS.map(function(c){ return c.face; }));
+  if (jimmyOffered) pickIssue(); else jimmyOffer();
+}
+function leaveMatdaan(){
+  hideModal(); ['result','vote'].forEach(function(id){ $(id).classList.remove('show'); });
+  stage.clearLineup(); S.mode = 'story'; updateHUD(); showTitle();
+}
+function jimmyOffer(){
+  jimSay('Bro, you are busy. Give me your voter slip, I will vote for you. No tension!');
+  showModal('<h2>Matdaan Day</h2><p>The roll is clean and the booth is open. But Jimmy has arrived with a big smile.</p>' +
+    '<blockquote>Bro, you are busy. Give me your voter slip, I will vote for you. No tension!<br><small>Jugaadu Jimmy, your best friend</small></blockquote>' +
+    '<button class="primary" id="no">No thanks, I will vote myself</button><button class="secondary" id="yes">Sure, take it</button>',
+    function(){
+      $('no').onclick = function(){ jimmyOffered = true; sfx.good(); stage.jimmyCatch(); say('Good. Your vote is yours alone.'); pickIssue(); };
+      $('yes').onclick = function(){
+        sfx.jimmy(); stage.jimmyWin();
+        showModal('<h2>Oops</h2><p>Jimmy voted seven times in seven different names and giggled all the way home.</p>' +
+          '<p class="fact"><b>In real life:</b> voting in someone else\u2019s name is called personation, and it is a punishable offence. Your vote is personal.</p>' +
+          '<button class="primary" id="back">Take the slip back</button>',
+          function(){ $('back').onclick = function(){ jimmyOffer(); }; });
+      };
+    });
+}
+function pickIssue(){
+  $('vote').classList.remove('show'); $('result').classList.remove('show');
+  var h = '<h2>Pick your issue</h2><p>One vote, one issue that matters most to you. Each candidate will pitch a plan for it.</p><div class="issues">';
+  ISSUES.forEach(function(it, i){ h += '<button class="issuebtn" data-i="' + i + '"><b>' + it.h + '</b><span>' + it.q + '</span></button>'; });
+  h += '</div><button class="secondary" id="back">Back to title</button>';
+  showModal(h, function(m){
+    [].forEach.call(m.querySelectorAll('.issuebtn'), function(b){ b.onclick = function(){ hideModal(); showCands(parseInt(b.getAttribute('data-i'), 10)); }; });
+    $('back').onclick = leaveMatdaan;
+  });
+}
+function showCands(ix){
+  var it = ISSUES[ix]; voteState.issue = ix; voteState.sel = -1; stage.markCand(-1);
+  var h = '<h3>' + it.h + ': who has the best plan?</h3><p class="sub"><span>' + it.q + '</span> <span>Tap a candidate, then cast your vote.</span></p><div class="cands">';
+  CANDS.forEach(function(c, i){
+    var p = c.p[it.k];
+    h += '<button class="cand" data-i="' + i + '" aria-pressed="false"><span class="fc">' + faceSVG(c) + '</span><span><b>' + c.name + '</b><small>' + c.tag + '</small></span>' +
+         '<span class="meter" role="img" aria-label="Promise meter ' + p.real + ' of 5">' + meterHTML(p.real) + '</span><p class="pr">\u201C' + p.say + '\u201D</p></button>';
+  });
+  h += '</div><div id="castWrap"><p class="sub" style="margin:0 0 6px">The bars show how doable each promise is.</p><button class="primary" id="cast" disabled>Cast my vote</button></div>';
+  $('vote').innerHTML = h; $('vote').classList.add('show');
+  $('vote').querySelector('.cands').onclick = function(e){
+    var b = e.target.closest('.cand'); if (!b) return;
+    var i = parseInt(b.getAttribute('data-i'), 10); voteState.sel = i; sfx.tap();
+    [].forEach.call($('vote').querySelectorAll('.cand'), function(x){ x.setAttribute('aria-pressed', String(x === b)); });
+    $('cast').disabled = false; stage.markCand(i); stage.pickCand(i);
+  };
+  $('cast').onclick = function(){ if (voteState.sel >= 0) castVote(); };
+}
+function castVote(){
+  var it = ISSUES[voteState.issue], c = CANDS[voteState.sel], p = c.p[it.k];
+  $('vote').classList.remove('show'); sfx.vote(); stage.pickCand(voteState.sel);
+  say(p.real >= 4 ? 'A plan with homework attached. Rare!' : (p.real <= 2 ? 'Bold. Promises are cheap, budgets are not.' : 'Decent. Now ask who pays for it.'));
+  var others = '';
+  CANDS.forEach(function(o, i){ if (i !== voteState.sel){ var q = o.p[it.k]; others += '<p><b>' + o.name + '</b> <span>(' + q.real + ' of 5):</span> <span>' + q.later + '</span></p>'; } });
+  $('result').innerHTML = '<h3 class="good">Ink on your finger. Vote cast!</h3>' +
+    '<p>You voted for ' + c.name + ' on ' + it.h + '.</p><p><i>\u201C' + c.slogan + '\u201D</i></p>' +
+    '<p class="fact"><b>Five years later:</b> ' + p.later + '</p><p class="tally">Promise meter: ' + p.real + ' of 5</p>' +
+    '<details><summary>See what the others would have done</summary>' + others + '</details>' +
+    '<p class="fact"><b>In real life:</b> look at a candidate\u2019s track record and public affidavit, and ask how a promise will be paid for and by when.</p>' +
+    '<button class="primary" id="again2">Try another issue</button><button class="secondary" id="home">Back to title</button>';
+  $('result').classList.add('show');
+  statVote(it.k);
+  $('again2').onclick = function(){ $('result').classList.remove('show'); stage.markCand(-1); pickIssue(); };
+  $('home').onclick = leaveMatdaan;
+}
+
+/* ---------- disguises ---------- */
+function bx(w,h,d,c,x,y,z){ return mesh(new THREE.BoxGeometry(w,h,d), mat(c), x,y,z); }
+var DIS = [
+  {n:'big fake moustache', f:function(){ return []; }},
+  {n:'cardboard glasses', f:function(){ return [bx(0.26,0.2,0.03,'#c8a36a',-0.15,2.05,0.37), bx(0.26,0.2,0.03,'#c8a36a',0.15,2.05,0.37), bx(0.1,0.03,0.03,'#c8a36a',0,2.08,0.37)]; }},
+  {n:'red clown nose and glasses', f:function(){
+    var nose = mesh(new THREE.SphereGeometry(0.09,10,8), mat('#d63c2f'), 0,1.97,0.4);
+    var l = mesh(new THREE.TorusGeometry(0.11,0.02,8,16), mat('#222'), -0.15,2.07,0.36), r = mesh(new THREE.TorusGeometry(0.11,0.02,8,16), mat('#222'), 0.15,2.07,0.36);
+    return [nose, l, r]; }},
+  {n:'fake white beard', f:function(){ return [bx(0.5,0.34,0.14,'#f2f2f2',0,1.66,0.27), mesh(new THREE.SphereGeometry(0.16,10,8), mat('#f2f2f2'), 0,1.5,0.25)]; }},
+  {n:'party hat', f:function(){ return [mesh(new THREE.ConeGeometry(0.24,0.55,12), mat('#f4b41a'), 0,2.8,0), mesh(new THREE.SphereGeometry(0.07,8,8), mat('#d63c2f'), 0,3.1,0)]; }},
+  {n:'orange wig and sunglasses', f:function(){
+    var a = mesh(new THREE.SphereGeometry(0.22,10,8), mat('#e8741a'), -0.42,2.05,0), b = mesh(new THREE.SphereGeometry(0.22,10,8), mat('#e8741a'), 0.42,2.05,0), c = mesh(new THREE.SphereGeometry(0.3,10,8), mat('#e8741a'), 0,2.0,-0.3);
+    return [a, b, c, bx(0.26,0.14,0.03,'#111',-0.15,2.05,0.37), bx(0.26,0.14,0.03,'#111',0.15,2.05,0.37)]; }}
+];
+stage.disguise = function(i){
+  var d = DIS[i % DIS.length];
+  if (GL){
+    (jimmy.userData.props || []).forEach(function(pr){ jimmy.remove(pr); });
+    jimmy.userData.props = d.f(); jimmy.userData.props.forEach(function(pr){ jimmy.add(pr); });
+  }
+  return d.n;
+};
+
+/* ---------- stats and badges ---------- */
+var BADGES = [
+  {id:'catch1', t:'First catch', d:'Catch your first fake entry.', ok:function(st){ return st.caught >= 1; }},
+  {id:'catch25', t:'Jimmy\u2019s nightmare', d:'Catch 25 fake entries in total.', ok:function(st){ return st.caught >= 25; }},
+  {id:'r1', t:'Junior Sleuth', d:'Score 600 in the story.', ok:function(st){ return st.best >= 600; }},
+  {id:'r2', t:'Senior Inspector', d:'Score 1500 in the story.', ok:function(st){ return st.best >= 1500; }},
+  {id:'r3', t:'Roll Master', d:'Score 2600 in the story.', ok:function(st){ return st.best >= 2600; }},
+  {id:'s3', t:'Three-day streak', d:'Win the daily case file three days in a row.', ok:function(st){ return st.dmax >= 3; }},
+  {id:'s7', t:'Seven-day streak', d:'Win the daily case file seven days in a row.', ok:function(st){ return st.dmax >= 7; }},
+  {id:'s30', t:'Thirty-day streak', d:'Win the daily case file thirty days in a row.', ok:function(st){ return st.dmax >= 30; }},
+  {id:'v1', t:'First vote', d:'Cast a vote on Matdaan Day.', ok:function(st){ return st.votes >= 1; }},
+  {id:'v4', t:'Issue explorer', d:'Vote on all four issues on Matdaan Day.', ok:function(st){ return st.issues.length >= 4; }}
+];
+var BCOL = ['#c8541a','#7a3f98','#2f6f73','#3a66d8','#d63c2f','#257a4a','#e0a100','#c2185b','#556b2f','#1d1b2e'];
+function getStats(){
+  var st = {caught:0, best:0, votes:0, issues:[], earned:[], dmax:0};
+  try { var r = JSON.parse(localStorage.getItem('vld-stats') || 'null'); if (r) st = Object.assign(st, r); } catch(e){}
+  return st;
+}
+function saveStats(st){ try { localStorage.setItem('vld-stats', JSON.stringify(st)); } catch(e){} }
+function awardCheck(){
+  var st = getStats(), fresh = [];
+  BADGES.forEach(function(b){ if (st.earned.indexOf(b.id) < 0 && b.ok(st)){ st.earned.push(b.id); fresh.push(b.t); } });
+  if (fresh.length){ saveStats(st); sfx.win(); say('Badge unlocked: ' + fresh.join(', ') + '!'); }
+}
+function statCatch(){ var st = getStats(); st.caught++; saveStats(st); }
+function statStory(){ var st = getStats(); if (S.score > st.best) st.best = S.score; saveStats(st); awardCheck(); }
+function statDaily(streak){ var st = getStats(); st.dmax = Math.max(st.dmax || 0, streak); saveStats(st); awardCheck(); }
+function statVote(k){ var st = getStats(); st.votes++; if (st.issues.indexOf(k) < 0) st.issues.push(k); saveStats(st); awardCheck(); }
+function badgeSVG(i, e){
+  return '<svg viewBox="0 0 40 40" aria-hidden="true"><circle cx="20" cy="20" r="18" fill="' + (e ? BCOL[i] : '#8a8799') + '"/><polygon points="20,8 23.5,16.5 32.5,17 25.5,23 27.8,32 20,27 12.2,32 14.5,23 7.5,17 16.5,16.5" fill="' + (e ? '#fff6e0' : '#d8d5e3') + '"/></svg>';
+}
+function showBadges(){
+  var st = getStats(), rec = {last:'', streak:0};
+  try { rec = JSON.parse(localStorage.getItem('vld-daily') || 'null') || rec; } catch(e){}
+  var now = new Date(), y = new Date(now.getTime()); y.setDate(y.getDate()-1);
+  var cur = (rec.last === keyOf(now) || rec.last === keyOf(y)) ? (rec.streak || 0) : 0, n = 0;
+  var cards = '';
+  BADGES.forEach(function(b, i){
+    var e = st.earned.indexOf(b.id) >= 0 || b.ok(st); if (e) n++;
+    cards += '<div class="badge' + (e ? ' on' : '') + '">' + badgeSVG(i, e) + '<b>' + b.t + '</b><span>' + b.d + '</span><small>' + (e ? 'Earned' : 'Locked') + '</small></div>';
+  });
+  var h = '<h2>My badges</h2><p class="small">' + n + ' of ' + BADGES.length + ' badges earned</p>' +
+    '<div class="stats"><div><b>' + cur + '</b>day streak</div><div><b>' + st.caught + '</b>fake entries caught</div><div><b>' + st.best + '</b>best story score</div><div><b>' + st.votes + '</b>votes cast</div></div>' +
+    '<div class="badges">' + cards + '</div><button class="primary" id="close">Close</button>';
+  showModal(h, function(){ $('close').onclick = function(){ hideModal(); showTitle(); }; });
+}
+
+/* ---------- languages: English, Hinglish, Hindi ---------- */
+var LANGS = ['en','hl','hi'], LSHORT = {en:'EN', hl:'HL', hi:'हि'}, LFULL = {en:'English', hl:'Hinglish', hi:'हिन्दी'};
+var lang = 'en';
+try { lang = localStorage.getItem('vld-lang') || 'en'; } catch(e){}
+if (LANGS.indexOf(lang) < 0) lang = 'en';
+var CASEI = {
+ 'Savita Deshmukh|GN-0114':{hl:'Apni pen saath laayi thi. Shak ki had tak organised.##Steel ke dhule gilaas jaisi saaf. Yahan kuch galat nahi.##List ki zyadatar entries asli hoti hain. Asli voter ko flag karna utna hi gambhir hai jitna nakli ko chhod dena.',hi:'अपना पेन साथ लाई थीं। शक की हद तक सुव्यवस्थित।##धुले हुए स्टील के गिलास जैसी साफ़। यहाँ कुछ ग़लत नहीं।##सूची की ज़्यादातर प्रविष्टियाँ असली होती हैं। असली मतदाता को चिह्नित करना उतना ही गंभीर है जितना नकली को छोड़ देना।'},
+ 'Bhola Prasad|GN-0066':{hl:'Ration dukaan kehti hai ki wo ab bhi gehun lete hain. Unka WhatsApp status online dikhata hai.##Telegraph se pehle paida hue, aur lagta hai WhatsApp par ab bhi bahut active. Jimmy list update karna bhool gaya.##Form 7 se kisi bhi entry par aapatti uthayi ja sakti hai, jaise mrit voter. Adhikari jaanch ke baad hi kuch hatate hain.',hi:'राशन की दुकान कहती है कि वे अब भी गेहूँ लेते हैं। उनका व्हाट्सऐप स्टेटस ऑनलाइन दिखाता है।##टेलीग्राफ़ से पहले जन्मे, और लगता है व्हाट्सऐप पर अब भी बहुत सक्रिय। जिम्मी सूची अपडेट करना भूल गया।##फ़ॉर्म 7 से किसी भी प्रविष्टि पर आपत्ति उठाई जा सकती है, जैसे मृत मतदाता। अधिकारी जाँच के बाद ही कुछ हटाते हैं।'},
+ 'Ramesh Kumar|GN-0231':{hl:'Shaandaar moonchon ke garvit maalik.##Asli voter, asli moonch. Uska chehra yaad rakhiye, aap use phir dekhenge.##Neeche ki "Ab tak ki list" use kijiye. Duplicate wahi insaan hota hai jo do baar likha gaya ho.',hi:'शानदार मूँछों के गर्वित मालिक।##असली मतदाता, असली मूँछ। उसका चेहरा याद रखिए, आप उसे फिर देखेंगे।##नीचे की "अब तक की सूची" का इस्तेमाल कीजिए। दोहरी प्रविष्टि वही इंसान होता है जो दो बार लिखा गया हो।'},
+ 'Rmesh Kumar|GN-0877':{hl:'Moonch abhi-abhi chipkayi hui lagti hai. Thodi tedhi.##Ek akshar kam, ek tedhi moonch, wahi aadmi. Jimmy bhes badalne mein achha nahi hai.##Ek insaan list mein sirf ek baar hona chahiye. Duplicate entries par Form 7 se aapatti ki jaati hai.',hi:'मूँछ अभी-अभी चिपकाई हुई लगती है। थोड़ी टेढ़ी।##एक अक्षर कम, एक टेढ़ी मूँछ, वही आदमी। जिम्मी भेस बदलने में अच्छा नहीं है।##एक इंसान सूची में सिर्फ़ एक बार होना चाहिए। दोहरी प्रविष्टियों पर फ़ॉर्म 7 से आपत्ति की जाती है।'},
+ 'Gudiya Verma|GN-0402':{hl:'Chaudah aur voter isi pate par hain. Bargad ke ped se poochha nahi gaya.##Chaudah voter, ek ped. Har galti dhokha nahi hoti. Kabhi-kabhi list bas sudharni hoti hai.##Form 8 se details sudhari jaati hain, ya usi nirvachan kshetra mein pata badla jaata hai.',hi:'चौदह और मतदाता इसी पते पर हैं। बरगद के पेड़ से पूछा नहीं गया।##चौदह मतदाता, एक पेड़। हर ग़लती धोखा नहीं होती। कभी-कभी सूची को बस सुधारना होता है।##फ़ॉर्म 8 से जानकारी सुधारी जाती है, या उसी निर्वाचन क्षेत्र में पता बदला जाता है।'},
+ 'Aarav Joshi|—':{hl:'List mein nahi mila. 18wen janmdin se intezaar kar raha hai.##Yogya, utsahit, aur list se gayab. Yahan koi villain nahi, bas ek kami hai.##Form 6 un naye voters ke liye hai jo 18 saal ke ho chuke hain. Ise online bhi bhara ja sakta hai.',hi:'सूची में नहीं मिला। 18वें जन्मदिन से इंतज़ार कर रहा है।##योग्य, उत्साही, और सूची से ग़ायब। यहाँ कोई खलनायक नहीं, बस एक कमी है।##फ़ॉर्म 6 उन नए मतदाताओं के लिए है जो 18 साल के हो चुके हैं। इसे ऑनलाइन भी भरा जा सकता है।'},
+ 'Farida Khan|GN-0290':{hl:'Har deadline ki spreadsheet hai. Aapki bhi.##Sangathit, asli aur thodi daraavni. Clear.##Chunaav se pehle list mein apni entry khud dekh lene se aakhri pal ki pareshani nahi hoti.',hi:'हर समय-सीमा की स्प्रेडशीट है। आपकी भी।##सुव्यवस्थित, असली और थोड़ी डरावनी। मंज़ूर।##चुनाव से पहले सूची में अपनी प्रविष्टि खुद देख लेने से आख़िरी पल की परेशानी नहीं होती।'},
+ 'Asha Kulkarni|—':{hl:'Ek mahine pehle doosre shehar se Gadbad Nagar aayi. Purana voter card purane shehar mein hi hai.##Naya shehar, wahi voter, yahan abhi entry nahi. Nayi shuruaat, dhokha nahi.##Kisi doosre nirvachan kshetra mein gaye? Jahan ab rehte hain wahan Form 6 bharo.',hi:'एक महीने पहले दूसरे शहर से गड़बड़ नगर आईं। पुराना मतदाता कार्ड पुराने शहर में ही है।##नया शहर, वही मतदाता, यहाँ अभी प्रविष्टि नहीं। नई शुरुआत, धोखा नहीं।##किसी दूसरे निर्वाचन क्षेत्र में चले गए? जहाँ अब रहते हैं वहाँ फ़ॉर्म 6 भरिए।'},
+ 'Mohan Lal|GN-0310':{hl:'Kone par cycle ki dukaan chalate hain. Pichhle hafte aapka tyre theek kiya.##Imaandaar voter, imaandaar puncture ki dukaan.##Kisi ko vyaktigat roop se jaanna use clear ya flag karne ki wajah nahi hai. Card dekhiye.',hi:'कोने पर साइकिल की दुकान चलाते हैं। पिछले हफ़्ते आपका टायर ठीक किया।##ईमानदार मतदाता, ईमानदार पंक्चर की दुकान।##किसी को व्यक्तिगत रूप से जानना उसे मंज़ूर या चिह्नित करने की वजह नहीं है। कार्ड देखिए।'},
+ 'Pappu Singh|GN-0488':{hl:'Har chunaav mein wahi narangi shirt pehente hain.##Asli. Us chehre aur us shirt ko baad ke liye yaad rakhiye.##Rishtedaar ka naam, umar aur photo jaisi baatein milakar hi duplicate pakde jaate hain.',hi:'हर चुनाव में वही नारंगी कमीज़ पहनते हैं।##असली। उस चेहरे और उस कमीज़ को बाद के लिए याद रखिए।##संबंधी का नाम, उम्र और फ़ोटो जैसी बातें मिलाकर ही दोहरी प्रविष्टियाँ पकड़ी जाती हैं।'},
+ 'Kamala Bai|GN-0099':{hl:'Padosiyon ne pichhli barsaat mein antim sanskar mein shirkat ki. Nukkad ki dukaan par unka cup sammaan ke saath retire ho gaya.##Chali gayin, par list mein abhi bhi hain. Jimmy ko bharosa tha ki koi dekhega nahi.##Mrityu sthaniya registrar ke paas darj hoti hai. Mrityu praman patra se adhikari ko Form 7 aapatti jaanchne mein madad milti hai.',hi:'पड़ोसियों ने पिछली बरसात में अंतिम संस्कार में शिरकत की। नुक्कड़ की दुकान पर उनका कप सम्मान के साथ सेवानिवृत्त हो गया।##चली गईं, पर सूची में अब भी हैं। जिम्मी को भरोसा था कि कोई देखेगा नहीं।##मृत्यु स्थानीय रजिस्ट्रार के पास दर्ज होती है। मृत्यु प्रमाण पत्र से अधिकारी को फ़ॉर्म 7 की आपत्ति जाँचने में मदद मिलती है।'},
+ 'Sohan Lal|GN-0311':{hl:'Mohan Lal ka judwa, chaar minute baad paida hua. Maanta hai ki wahi smart hai.##Judwa! Wahi pita, wahi janmdin, alag insaan. Jaldbaazi karne walon ke liye jaal.##Flag karne se pehle poori tasveer dekhiye. Milti-julti details ka matlab hamesha duplicate nahi hota.',hi:'मोहन लाल का जुड़वाँ, चार मिनट बाद जन्मा। मानता है कि वही स्मार्ट है।##जुड़वाँ! वही पिता, वही जन्मदिन, अलग इंसान। जल्दबाज़ी करने वालों के लिए जाल।##चिह्नित करने से पहले पूरी तस्वीर देखिए। मिलती-जुलती जानकारी का मतलब हमेशा दोहरी प्रविष्टि नहीं होता।'},
+ 'Pappu Sing|GN-0902':{hl:'Gatte ke chashme pehne hain. Zukaam wale Pappu Singh jaise lagte hain.##Wahi chehra, wahi shirt, bilkul naye chashme. Jimmy ne apna hi bhes dobara use kiya.##Duplicate entries par Form 7 se aapatti ki ja sakti hai taaki ek insaan do baar vote na de.',hi:'गत्ते के चश्मे पहने हैं। ज़ुकाम वाले पप्पू सिंह जैसे लगते हैं।##वही चेहरा, वही कमीज़, बिल्कुल नए चश्मे। जिम्मी ने अपना ही भेस दोबारा इस्तेमाल किया।##दोहरी प्रविष्टियों पर फ़ॉर्म 7 से आपत्ति की जा सकती है ताकि एक इंसान दो बार वोट न दे।'},
+ 'Bijli Khamba|GN-0777':{hl:'Photo kamaal ki chamakdaar hai. Gyarah saal se hila nahi.##Voter card wala lamp post. Jimmy ke dost khatam ho rahe hain.##Jinke peeche koi asli insaan nahi, aisi entries par Form 7 se aapatti ki ja sakti hai. Zameeni jaanch dekhti hai ki voter sach mein hain.',hi:'फ़ोटो कमाल की चमकदार है। ग्यारह साल से हिला नहीं।##मतदाता कार्ड वाला लैम्प पोस्ट। जिम्मी के दोस्त ख़त्म हो रहे हैं।##जिनके पीछे कोई असली इंसान नहीं, ऐसी प्रविष्टियों पर फ़ॉर्म 7 से आपत्ति की जा सकती है। ज़मीनी जाँच देखती है कि मतदाता सचमुच हैं।'},
+ 'Sheela Pandey|GN-0356':{hl:'Wo building 2016 mein gir gayi. Ab wo shehar ke doosri taraf rehti hain, rasid ke saath.##Imaandaar gadbad, koi villain nahi. Unka pata bas update nahi hua.##Usi nirvachan kshetra mein ghar badla? Form 8 se pata update hota hai. Doosre kshetra mein gaye? Wahan Form 6 bharo.',hi:'वह इमारत 2016 में गिरा दी गई थी। अब वे शहर के दूसरी तरफ़ रहती हैं, रसीदों के साथ।##ईमानदार गड़बड़, कोई खलनायक नहीं। उनका पता बस अपडेट नहीं हुआ।##उसी निर्वाचन क्षेत्र में घर बदला? फ़ॉर्म 8 से पता अपडेट होता है। दूसरे क्षेत्र में गए? वहाँ फ़ॉर्म 6 भरिए।'},
+ 'Raja Babu|GN-0021':{hl:'Roz paanch kilometre chalte hain aur raste mein har kisi ko parakhte hain.##Atthasi saal ke aur bilkul zinda. Sirf umar kuch saabit nahi karti.##Andaze se kabhi flag mat kijiye. Galti se naam hatne par kisi ka vote chheen jaata hai, isiliye jaanch zaroori hai.',hi:'रोज़ पाँच किलोमीटर चलते हैं और रास्ते में हर किसी को परखते हैं।##अट्ठासी साल के और बिल्कुल ज़िंदा। सिर्फ़ उम्र कुछ साबित नहीं करती।##अंदाज़े से कभी चिह्नित मत कीजिए। ग़लती से नाम हटने पर किसी का वोट छिन जाता है, इसीलिए जाँच ज़रूरी है।'},
+ 'Balwant Chauhan|GN-0912':{hl:'Bilkul villain jaisa dikhta hai. Hai retired daakiya.##Kaale chashme, badi moonch, poori tarah begunah. Shakal saboot nahi hoti.##Record dekhiye, shakal nahi. Asli voter ko galti se flag karne ke asli nateeje hote hain.',hi:'बिल्कुल खलनायक जैसा दिखता है। है सेवानिवृत्त डाकिया।##काले चश्मे, बड़ी मूँछ, पूरी तरह बेक़सूर। शक्ल सबूत नहीं होती।##रिकॉर्ड देखिए, शक्ल नहीं। असली मतदाता को ग़लती से चिह्नित करने के असली नतीजे होते हैं।'},
+ 'Anita Reddy|GN-1201':{hl:'Poori line ke liye snacks laayi.##Asli. Udaar bhi.##Unhe yaad rakhiye. Mega Scheme ko nakal pasand hai.',hi:'पूरी कतार के लिए नाश्ता लाईं।##असली। उदार भी।##उन्हें याद रखिए। महा-योजना को नक़ल पसंद है।'},
+ 'Putla Ram|GN-1344':{hl:'Chaar saal se hile nahi. Posture kamaal ka.##Voter card wala putla. Posture shaandaar, yogyata shoonya.##Bhoot entries ke peeche koi asli insaan nahi hota. Booth adhikariyon ki zameeni jaanch unhe pakadne mein madad karti hai.',hi:'चार साल से हिले नहीं। मुद्रा कमाल की।##मतदाता कार्ड वाला पुतला। मुद्रा शानदार, योग्यता शून्य।##भूत प्रविष्टियों के पीछे कोई असली इंसान नहीं होता। बूथ अधिकारियों की ज़मीनी जाँच उन्हें पकड़ने में मदद करती है।'},
+ 'Imran Qureshi|GN-0765':{hl:'Koi note nahi. Bas ek insaan jo vote dena aur samosa dhoondhna chahta hai.##Saadha, imaandaar aur bhookha. Yahan kuch galat nahi.##Zyadatar voter bilkul aise hi dikhte hain. Villain ko aapko shaki mat banane dijiye.',hi:'कोई नोट नहीं। बस एक इंसान जो वोट देना और समोसा ढूँढना चाहता है।##सीधा, ईमानदार और भूखा। यहाँ कुछ ग़लत नहीं।##ज़्यादातर मतदाता बिल्कुल ऐसे ही दिखते हैं। खलनायक को आपको शक्की मत बनाने दीजिए।'},
+ 'Anita Reddi|GN-1587':{hl:'Snacks nahi laayi. Shak ki baat.##Wahi chehra, ek akshar badla, snacks zero. Jimmy ka classic kaam.##Duplicate ka matlab ek insaan do baar vote de sakta hai, isiliye Form 7 aapattiyan hoti hain.',hi:'नाश्ता नहीं लाईं। शक की बात।##वही चेहरा, एक अक्षर बदला, नाश्ता शून्य। जिम्मी का क्लासिक काम।##दोहरी प्रविष्टि का मतलब एक इंसान दो बार वोट दे सकता है, इसीलिए फ़ॉर्म 7 की आपत्तियाँ होती हैं।'},
+ 'Hari Om Tiwari|GN-0033':{hl:'2018 mein mrityu praman patra jama hua, par list kabhi update nahi hui.##Saalon baad bhi list mein hain. Jimmy ko pichhadta register pasand hai.##Mrit voter ke baare mein koi bhi adhikariyon ko Form 7 se bata sakta hai. Mrityu praman patra jaanch mein madad karta hai.',hi:'2018 में मृत्यु प्रमाण पत्र जमा हुआ, पर सूची कभी अपडेट नहीं हुई।##सालों बाद भी सूची में हैं। जिम्मी को पिछड़ा हुआ रजिस्टर पसंद है।##मृत मतदाता के बारे में कोई भी अधिकारियों को फ़ॉर्म 7 से बता सकता है। मृत्यु प्रमाण पत्र जाँच में मदद करता है।'},
+ 'Meena Tiwari|GN-1440':{hl:'Hari Om ki poti. Wahi surname, wahi ghar, alag insaan.##Parivaar ke log surname aur pata saajha karte hain. Ye saamanya hai, shak ki baat nahi.##Saajha pata aur saajha surname duplicate nahi banata.',hi:'हरि ओम की पोती। वही उपनाम, वही घर, अलग इंसान।##परिवार के लोग उपनाम और पता साझा करते हैं। यह सामान्य है, शक की बात नहीं।##साझा पता और साझा उपनाम दोहरी प्रविष्टि नहीं बनाते।'},
+ 'Jagdish Nair|GN-0618':{hl:'Pichhle saal usi ward mein naye flat mein gaye. List mein abhi bhi purani jagah hai.##Wo shift ho gaye, list nahi. Kaagzi kaam, badmaashi nahi.##Apna pata Form 8 se update kijiye taaki aap sahi booth par vote dein.',hi:'पिछले साल उसी वार्ड में नए फ़्लैट में गए। सूची में अब भी पुरानी जगह है।##वे शिफ़्ट हो गए, सूची नहीं। काग़ज़ी काम, बदमाशी नहीं।##अपना पता फ़ॉर्म 8 से अपडेट कीजिए ताकि आप सही बूथ पर वोट दें।'},
+ 'Tanvi Bose|—':{hl:'Pichhle mahine 18 ki hui. Maa saath laayi. Maa thermos bhi laayi.##Bilkul naya voter, tayyar aur thermos ke saath.##Form 6 18 saal ke hone par list mein aane ka pehla kadam hai.',hi:'पिछले महीने 18 की हुईं। माँ साथ लाईं। माँ थर्मस भी लाईं।##बिल्कुल नया मतदाता, तैयार और थर्मस के साथ।##फ़ॉर्म 6 18 साल के होने पर सूची में आने का पहला क़दम है।'},
+ 'Gulab Chand|GN-2041':{hl:'Parivaar kehta hai saalon pehle guzar gaye. Park ki unki bench ab smarak hai.##Park se chale gaye, list mein abhi hain. Jimmy ko bharosa tha ki koi bench dekhne nahi jayega.##Mrityu praman patra se adhikari ko mrit voter ki entry par Form 7 aapatti jaanchne mein madad milti hai.',hi:'परिवार कहता है सालों पहले गुज़र गए। पार्क की उनकी बेंच अब स्मारक है।##पार्क से चले गए, सूची में अब भी हैं। जिम्मी को भरोसा था कि कोई बेंच देखने नहीं जाएगा।##मृत्यु प्रमाण पत्र से अधिकारी को मृत मतदाता की प्रविष्टि पर फ़ॉर्म 7 की आपत्ति जाँचने में मदद मिलती है।'},
+ 'Kheti Lal|GN-2088':{hl:'Bina shikayat baarish mein khade rehte hain. Kabhi chhutti nahi maangi.##Voter card wala ek aur putla. Mehnati, par voter nahi.##Bhoot entries ke peeche koi asli insaan nahi hota. Unpar Form 7 se aapatti hoti hai.',hi:'बिना शिकायत बारिश में खड़े रहते हैं। कभी छुट्टी नहीं माँगी।##मतदाता कार्ड वाला एक और पुतला। मेहनती, पर मतदाता नहीं।##भूत प्रविष्टियों के पीछे कोई असली इंसान नहीं होता। उन पर फ़ॉर्म 7 से आपत्ति होती है।'},
+ 'Jyoti Stambh|GN-2107':{hl:'Raat ko tez chamakta hai. Kabhi line mein nahi laga.##Voter card wala ek aur lamp post. Jimmy ki ek hi pasand hai.##Zameeni jaanch dekhti hai ki list ke log sach mein maujood hain.',hi:'रात को तेज़ चमकता है। कभी कतार में नहीं लगा।##मतदाता कार्ड वाला एक और लैम्प पोस्ट। जिम्मी की एक ही पसंद है।##ज़मीनी जाँच देखती है कि सूची के लोग सचमुच मौजूद हैं।'},
+ 'Kiran Sethi|GN-2290':{hl:'Akhbaar hamesha khade hokar padhte hain.##Asli voter. Chehra yaad rakhiye.##Photo aur rishtedaar ke naam duplicate pakadne ke sabse achhe sutra hain.',hi:'अख़बार हमेशा खड़े होकर पढ़ते हैं।##असली मतदाता। चेहरा याद रखिए।##फ़ोटो और संबंधी के नाम दोहरी प्रविष्टि पकड़ने के सबसे अच्छे सुराग हैं।'},
+ 'Kiran Sethi|GN-2711':{hl:'Ek topi aa gayi hai. Moonch bilkul wahi hai.##Wahi chehra, wahi pita, pate mein ek extra akshar aur nayi topi. Jimmy ne koshish ki.##Ek insaan, ek entry. Duplicate entries par Form 7 se aapatti ki jaati hai.',hi:'एक टोपी आ गई है। मूँछ बिल्कुल वही है।##वही चेहरा, वही पिता, पते में एक अतिरिक्त अक्षर और नई टोपी। जिम्मी ने कोशिश की।##एक इंसान, एक प्रविष्टि। दोहरी प्रविष्टियों पर फ़ॉर्म 7 से आपत्ति की जाती है।'},
+ 'Nisha Rao|GN-2150':{hl:'Cinema 2019 mein band ho gaya. Wo ab do kilometre door rehti hain aur popcorn ko yaad karti hain.##Imaandaar pate ki gadbad. Cinema chala gaya, entry reh gayi.##Usi nirvachan kshetra mein ghar badla? Form 8 se pata update hota hai.',hi:'सिनेमा 2019 में बंद हो गया। वे अब दो किलोमीटर दूर रहती हैं और पॉपकॉर्न को याद करती हैं।##ईमानदार पते की गड़बड़। सिनेमा चला गया, प्रविष्टि रह गई।##उसी निर्वाचन क्षेत्र में घर बदला? फ़ॉर्म 8 से पता अपडेट होता है।'},
+ 'Harpreet Gill|GN-2166':{hl:'Padhai poori ki, hostel chhoda, aur ab paas mein kiraye ke flat mein rehte hain. List abhi tak nahi badli.##Wo aage badh gaye, list nahi. Kaagzi kaam, badmaashi nahi.##Ghar badalne se list ki entries purani ho jaati hain. Form 8 ek hi kshetra ke andar ise theek karta hai.',hi:'पढ़ाई पूरी की, हॉस्टल छोड़ा, और अब पास में किराये के फ़्लैट में रहते हैं। सूची अब तक नहीं बदली।##वे आगे बढ़ गए, सूची नहीं। काग़ज़ी काम, बदमाशी नहीं।##घर बदलने से सूची की प्रविष्टियाँ पुरानी हो जाती हैं। फ़ॉर्म 8 एक ही क्षेत्र के भीतर इसे ठीक करता है।'},
+ 'Rohan Das|—':{hl:'Naukri ke liye doosre shehar se aaye. Ek paudha saath laaye.##Shehar mein naye aur abhi is list mein nahi. Paudha khoob phal-phool raha hai.##Doosre nirvachan kshetra mein jaane par jahan ab rehte hain wahan Form 6 bharna hota hai.',hi:'नौकरी के लिए दूसरे शहर से आए। एक पौधा साथ लाए।##शहर में नए और अभी इस सूची में नहीं। पौधा फल-फूल रहा है।##दूसरे निर्वाचन क्षेत्र में जाने पर जहाँ अब रहते हैं वहाँ फ़ॉर्म 6 भरना होता है।'},
+ 'Ishita Rane|—':{hl:'Abhi 18 ki hui hain. Ungli par syahi wali selfie ki practice kar rahi hain.##Yogya, utsahit aur abhi list mein nahi. Form 6 ka samay.##Form 6 online bhara ja sakta hai, daftar ki line mein lagne ki zaroorat nahi.',hi:'अभी 18 की हुई हैं। उँगली पर स्याही वाली सेल्फ़ी की प्रैक्टिस कर रही हैं।##योग्य, उत्साही और अभी सूची में नहीं। फ़ॉर्म 6 का समय।##फ़ॉर्म 6 ऑनलाइन भरा जा सकता है, दफ़्तर की कतार में लगने की ज़रूरत नहीं।'},
+ 'Zoya Ansari|GN-2201':{hl:'18wen janmdin par registration karaya aur sabko batati hain.##Registered, haazir aur garvit. Clear.##Registered voter polling se pehle online apna naam list mein dekh sakte hain.',hi:'18वें जन्मदिन पर पंजीकरण कराया और सबको बताती हैं।##पंजीकृत, हाज़िर और गर्वित। मंज़ूर।##पंजीकृत मतदाता मतदान से पहले ऑनलाइन अपना नाम सूची में देख सकते हैं।'},
+ 'Dr. Prakash Iyengar|GN-2230':{hl:'Card par nau degree likhi hain. Voter sirf ek.##Naam ke baad bahut saare akshar, par voter phir bhi ek hi.##Upaadhi aur degree duplicate nahi banate. Rishtedaar, umar aur photo dekhiye.',hi:'कार्ड पर नौ डिग्रियाँ लिखी हैं। मतदाता सिर्फ़ एक।##नाम के बाद बहुत सारे अक्षर, पर मतदाता फिर भी एक ही।##उपाधि और डिग्री दोहरी प्रविष्टि नहीं बनाते। संबंधी, उम्र और फ़ोटो देखिए।'},
+ 'Priya Nair|GN-2250':{hl:'Judwa behen hai. Bina poochhe bata degi.##Asli. Unki judwa agli hai.##Judwa logon ki kai details milti hain. Flag karne se pehle photo dekhiye.',hi:'जुड़वाँ बहन है। बिना पूछे बता देंगी।##असली। उनकी जुड़वाँ अगली है।##जुड़वाँ लोगों की कई जानकारियाँ मिलती हैं। चिह्नित करने से पहले फ़ोटो देखिए।'},
+ 'Riya Nair|GN-2251':{hl:'Priya ki judwa. Dono ek-doosre ke vaakya aur behas poori karti hain.##Judwa, duplicate nahi. Alag photo, alag insaan.##Wahi pata, wahi pita aur wahi umar phir bhi do asli log ho sakte hain.',hi:'प्रिया की जुड़वाँ। दोनों एक-दूसरे के वाक्य और बहस पूरी करती हैं।##जुड़वाँ, दोहरी प्रविष्टि नहीं। अलग फ़ोटो, अलग इंसान।##वही पता, वही पिता और वही उम्र फिर भी दो असली लोग हो सकते हैं।'}
+};
+var TR = [
+ ['Trainee Clerk','Trainee Clerk','प्रशिक्षु क्लर्क'],['Junior Sleuth','Junior Jasoos','जूनियर जासूस'],['Senior Inspector','Senior Inspector','सीनियर इंस्पेक्टर'],['Roll Master','Roll Master','रोल मास्टर'],
+ ['Reputation','Reputation','साख'],
+ ['Clear','Clear karo','मंज़ूर करो'],['Looks genuine','Sahi lag raha hai','सही लग रहा है'],['Duplicate','Duplicate','दोहरी प्रविष्टि'],['Deceased','Mrit','मृतक'],['Not a person','Insaan nahi','इंसान नहीं'],['Wrong address','Galat pata','ग़लत पता'],['Not on roll','List mein nahi','सूची में नहीं'],
+ ['Form 7','Form 7','फ़ॉर्म 7'],['Form 8','Form 8','फ़ॉर्म 8'],['Form 6','Form 6','फ़ॉर्म 6'],
+ ['Gadbad Nagar Electoral Roll, Part 7','Gadbad Nagar Matdata Suchi, Bhag 7','गड़बड़ नगर मतदाता सूची, भाग 7'],['Name','Naam','नाम'],['Relative','Rishtedaar','संबंधी'],['Age','Umar','उम्र'],['Address','Pata','पता'],['Roll no.','Suchi kramank','सूची क्र.'],['Officer\u2019s note:','Adhikari ka note:','अधिकारी का नोट:'],
+ ['Nobody yet. Clear a genuine voter and they show up here.','Abhi koi nahi. Kisi asli voter ko clear karo, wo yahan dikhega.','अभी कोई नहीं। किसी असली मतदाता को मंज़ूर कीजिए, वह यहाँ दिखेगा।'],
+ ['Voter List Detective','Voter List Detective','मतदाता सूची जासूस'],
+ ['Gadbad Nagar\u2019s electoral roll has a few too many names, and one of them is wearing a fake moustache. Audit the roll, catch Jimmy\u2019s fakes, and learn how the real forms work.','Gadbad Nagar ki voter list mein thode zyada naam hain, aur ek ne nakli moonch laga rakhi hai. List jaanchiye, Jimmy ke nakli naam pakdiye, aur seekhiye ki asli forms kaise kaam karte hain.','गड़बड़ नगर की मतदाता सूची में कुछ ज़्यादा ही नाम हैं, और उनमें से एक ने नकली मूँछ लगा रखी है। सूची जाँचिए, जिम्मी के नकली नाम पकड़िए, और सीखिए कि असली फ़ॉर्म कैसे काम करते हैं।'],
+ ['Start the case','Case shuru karo','केस शुरू करें'],['Daily case file','Roz ki case file','दैनिक केस फ़ाइल'],['Matdaan Day','Matdaan Day','मतदान दिवस'],['My badges','Mere badges','मेरे बैज'],
+ ['Fictional town, fictional people. No real politicians, parties or voter data.','Kaalpanik shehar, kaalpanik log. Koi asli neta, party ya voter data nahi.','काल्पनिक शहर, काल्पनिक लोग। कोई असली नेता, पार्टी या मतदाता डेटा नहीं।'],
+ ['Meet Tota and Jimmy','Tota aur Jimmy se milo','तोता और जिम्मी से मिलिए'],
+ ['Tota the parrot is your sidekick. Jugaadu Jimmy is your \u201Cbest friend\u201D, and he keeps sneaking fake names onto the roll while smiling at you.','Tota (tota hi hai) aapka saathi hai. Jugaadu Jimmy aapka \u201Cbest friend\u201D hai, jo muskurate hue list mein nakli naam ghusata rehta hai.','तोता आपका साथी है। जुगाड़ू जिम्मी आपका \u201Cबेस्ट फ्रेंड\u201D है, जो मुस्कुराते हुए सूची में नकली नाम घुसाता रहता है।'],
+ ['Read the card, then decide','Card padho, phir faisla karo','कार्ड पढ़िए, फिर तय कीजिए'],
+ ['Each voter walks up with an ID card. Looks genuine? Clear them. Something off? Flag it: duplicate, deceased, not a person, wrong address, or not on the roll yet.','Har voter ID card ke saath aata hai. Sahi lagta hai? Clear karo. Kuch gadbad? Flag karo: duplicate, mrit, insaan nahi, galat pata, ya abhi list mein nahi.','हर मतदाता पहचान पत्र के साथ आता है। सही लगे तो मंज़ूर कीजिए। कुछ गड़बड़ लगे तो चिह्नित कीजिए: दोहरी प्रविष्टि, मृतक, इंसान नहीं, ग़लत पता, या अभी सूची में नहीं।'],
+ ['Pick the right form','Sahi form chuno','सही फ़ॉर्म चुनिए'],
+ ['Red flags use Form 7 (object to an entry), yellow uses Form 8 (correct details or address), blue uses Form 6 (new voter). Flag a real voter by mistake and your reputation takes the hit.','Laal flag mein Form 7 (entry par aapatti), peela mein Form 8 (details ya pata sudharna), neela mein Form 6 (naya voter). Galti se asli voter ko flag kiya to aapki saakh girti hai.','लाल निशान में फ़ॉर्म 7 (प्रविष्टि पर आपत्ति), पीले में फ़ॉर्म 8 (जानकारी या पता सुधारना), नीले में फ़ॉर्म 6 (नया मतदाता)। ग़लती से असली मतदाता को चिह्नित किया तो आपकी साख गिरेगी।'],
+ ['Next','Aage','आगे'],['Open the roll','List kholo','सूची खोलिए'],
+ ['The Roll Room','Roll Room','सूची कक्ष'],['Jimmy\u2019s Disguises','Jimmy ke bhes','जिम्मी के भेस'],['The Mega Scheme','Mega Scheme','महा-योजना'],
+ ['Gadbad Nagar\u2019s voter roll is a mess. Check every voter who walks up. Genuine? Clear them. Something off? Flag it and file the right form.','Gadbad Nagar ki voter list ka bura haal hai. Jo bhi voter aaye, use jaanchiye. Sahi hai? Clear karo. Kuch gadbad? Flag karo aur sahi form bharo.','गड़बड़ नगर की मतदाता सूची का बुरा हाल है। जो भी मतदाता आए, उसे जाँचिए। सही है तो मंज़ूर कीजिए। कुछ गड़बड़ हो तो चिह्नित कीजिए और सही फ़ॉर्म भरिए।'],
+ ['Jimmy is back with new tricks. Twins, lookalikes and a few entries that are not even people. Be careful: some strange cases are perfectly real.','Jimmy naye tareekon ke saath wapas aa gaya hai. Judwa log, hamshakl aur kuch entries jo insaan hi nahi hain. Dhyaan rakhiye: kuch ajeeb cases bilkul asli hain.','जिम्मी नई चालों के साथ लौट आया है। जुड़वाँ, हमशक्ल और कुछ ऐसी प्रविष्टियाँ जो इंसान ही नहीं हैं। सावधान रहिए: कुछ अजीब मामले बिल्कुल असली हैं।'],
+ ['Jimmy\u2019s biggest scheme yet, and the clock is running. You have 15 seconds per voter, and faster answers earn bonus points.','Jimmy ki ab tak ki sabse badi scheme, aur ghadi chal rahi hai. Har voter ke liye 15 second hain, aur tez jawab par bonus points milte hain.','जिम्मी की अब तक की सबसे बड़ी योजना, और घड़ी चल रही है। हर मतदाता के लिए 15 सेकंड हैं, और जल्दी जवाब देने पर बोनस अंक मिलते हैं।'],
+ ['Relax, Inspector. What could go wrong? Trust me, yaar.','Relax, Inspector. Kya galat ho sakta hai? Trust me, yaar.','आराम से, इंस्पेक्टर। क्या ग़लत हो सकता है? भरोसा रखो, यार।'],
+ ['New hat, new glasses, same old me!','Nayi topi, naye chashme, wahi purana main!','नई टोपी, नए चश्मे, वही पुराना मैं!'],
+ ['Ten thousand names, one friend. You cannot stop me!','Das hazaar naam, ek dost. Aap mujhe rok nahi sakte!','दस हज़ार नाम, एक दोस्त। आप मुझे रोक नहीं सकते!'],
+ ['A fresh day, a fresh disguise. Trust me, yaar.','Naya din, naya bhes. Trust me, yaar.','नया दिन, नया भेस। भरोसा रखो, यार।'],
+ ['Jugaadu Jimmy, your best friend','Jugaadu Jimmy, aapka best friend','जुगाड़ू जिम्मी, आपका बेस्ट फ्रेंड'],
+ ['Elementary, my dear Matdaan.','Bilkul simple, mere pyare Matdaan.','बहुत आसान, मेरे प्यारे मतदान।'],['Sharp beak, sharper eyes.','Tez chonch, usse tez nazar.','तेज़ चोंच, उससे तेज़ नज़र।'],['Now that is detective work.','Ise kehte hain jasoosi.','इसे कहते हैं जासूसी।'],['The roll just sighed in relief.','List ne sukoon ki saans li.','सूची ने राहत की साँस ली।'],
+ ['Clear it is. Not everyone is a villain.','Clear hi sahi. Har koi villain nahi hota.','मंज़ूर ही सही। हर कोई खलनायक नहीं होता।'],['Good call. Genuine voters deserve a fast pass.','Badhiya faisla. Asli voters ko fast pass milna chahiye.','बढ़िया फ़ैसला। असली मतदाताओं को जल्दी निकलने देना चाहिए।'],['Squawk! Smooth.','Tyaaon! Ekdum smooth.','टाँय! बिल्कुल सहज।'],
+ ['Bold. Wrong, but bold.','Himmat wali. Galat, par himmat wali.','हिम्मती। ग़लत, पर हिम्मती।'],['I have seen better work from a lamp post.','Maine lamp post se behtar kaam dekha hai.','मैंने तो लैम्प पोस्ट को इससे बेहतर काम करते देखा है।'],['Interesting. Wrong, but interesting.','Dilchasp. Galat, par dilchasp.','दिलचस्प। ग़लत, पर दिलचस्प।'],['Squawk. Try again.','Tyaaon. Phir koshish karo.','टाँय। फिर कोशिश कीजिए।'],
+ ['Curse you, Inspector!','Lanat hai aap par, Inspector!','धिक्कार है आप पर, इंस्पेक्टर!'],['How did you spot that?!','Aapne ye pakda kaise?!','आपने यह पकड़ा कैसे?!'],['That disguise cost me two rupees!','Is bhes par mere do rupaye lage the!','इस भेस पर मेरे दो रुपये लगे थे!'],['Next time, yaar, next time!','Agli baar, yaar, agli baar!','अगली बार, यार, अगली बार!'],
+ ['Trust me, yaar.','Trust me, yaar.','भरोसा रखो, यार।'],['See? Nobody noticed.','Dekha? Kisi ne notice nahi kiya.','देखा? किसी ने ध्यान ही नहीं दिया।'],['It is just one vote, what is the harm?','Bas ek vote hai, kya bigadta hai?','बस एक वोट ही तो है, क्या बिगड़ता है?'],
+ ['Squawk! The clock won that round.','Tyaaon! Ghadi ye round jeet gayi.','टाँय! घड़ी यह दौर जीत गई।'],['You just flagged a real voter. Squawk of shame.','Aapne abhi ek asli voter ko flag kar diya. Sharm ki tyaaon.','आपने अभी एक असली मतदाता को चिह्नित कर दिया। शर्म की टाँय।'],['I will be back, Inspector!','Main wapas aaunga, Inspector!','मैं लौटकर आऊँगा, इंस्पेक्टर!'],
+ ['Cleared. Correct!','Clear kiya. Sahi!','मंज़ूर किया। सही!'],['Caught it!','Pakad liya!','पकड़ लिया!'],['Time is up!','Samay khatam!','समय समाप्त!'],['That one slipped through.','Ye nikal gaya.','यह बच निकला।'],['You flagged a real voter.','Aapne asli voter ko flag kiya.','आपने असली मतदाता को चिह्नित किया।'],['Right instinct, wrong flag.','Andaza sahi, flag galat.','अंदाज़ा सही, निशान ग़लत।'],
+ ['In real life:','Asli zindagi mein:','असल ज़िंदगी में:'],['Next voter','Agla voter','अगला मतदाता'],['See results','Nateeje dekho','नतीजे देखें'],
+ ['a genuine voter','ek asli voter','एक असली मतदाता'],['a duplicate entry','ek duplicate entry','एक दोहरी प्रविष्टि'],['a deceased voter','ek mrit voter','एक मृत मतदाता'],['a ghost entry (not a real person)','ek bhoot entry (asli insaan nahi)','एक भूत प्रविष्टि (असली इंसान नहीं)'],['a wrong address','ek galat pata','एक ग़लत पता'],['a voter missing from the roll','list se gayab ek voter','सूची से छूटा एक मतदाता'],
+ ['Form 7 is used to object to an entry on the roll.','Form 7 list ki kisi entry par aapatti ke liye hota hai.','फ़ॉर्म 7 सूची की किसी प्रविष्टि पर आपत्ति के लिए होता है।'],
+ ['Form 8 is used to correct details or change an address.','Form 8 details sudharne ya pata badalne ke liye hota hai.','फ़ॉर्म 8 जानकारी सुधारने या पता बदलने के लिए होता है।'],
+ ['Form 6 is used to register as a new voter.','Form 6 naye voter ke roop mein panjikaran ke liye hota hai.','फ़ॉर्म 6 नए मतदाता के रूप में पंजीकरण के लिए होता है।'],
+ ['Tap Stamp when the red marker is over the dark green zone.','Jab laal nishaan gehre hare hisse par ho, Stamp dabaiye.','जब लाल निशान गहरे हरे हिस्से पर हो, मुहर दबाइए।'],
+ ['Stamp','Stamp lagao','मुहर लगाओ'],['Perfect stamp! +50','Ekdum perfect stamp! +50','बिल्कुल सटीक मुहर! +50'],['Good stamp. +25','Achha stamp. +25','अच्छी मुहर। +25'],['Smudged. No bonus.','Dhabba lag gaya. Koi bonus nahi.','धब्बा लग गया। कोई बोनस नहीं।'],
+ ['Daily case filed','Roz ki case file jama','दैनिक केस फ़ाइल जमा'],
+ ['You caught every one of Jimmy\u2019s plants. He is running out of town.','Aapne Jimmy ke saare nakli naam pakad liye. Wo shehar chhodkar bhaag raha hai.','आपने जिम्मी के सारे नकली नाम पकड़ लिए। वह शहर छोड़कर भाग रहा है।'],
+ ['Some of Jimmy\u2019s names are still on the roll. He is dancing about it.','Jimmy ke kuch naam abhi bhi list mein hain. Wo naach raha hai.','जिम्मी के कुछ नाम अब भी सूची में हैं। वह नाच रहा है।'],
+ ['correct calls','sahi faisle','सही फ़ैसले'],['Jimmy plants caught','pakde gaye Jimmy ke naam','पकड़े गए जिम्मी के नाम'],['score','score','अंक'],['reputation left','bachi saakh','बची साख'],
+ ['Next level','Agla level','अगला स्तर'],['See final result','Aakhri nateeja dekho','अंतिम नतीजा देखें'],
+ ['Case closed','Case band','केस बंद'],['Jimmy wins this round','Jimmy ne ye round jeeta','जिम्मी ने यह दौर जीता'],
+ ['The roll is clean. Gadbad Nagar can finally vote in peace.','List saaf hai. Gadbad Nagar ab chain se vote de sakta hai.','सूची साफ़ है। गड़बड़ नगर अब चैन से वोट दे सकता है।'],
+ ['Your reputation ran out. Wrongly flagging real voters and missing fake ones both cost you the badge. Try again.','Aapki saakh khatam ho gayi. Asli voters ko galat flag karna aur nakli ko chhod dena, dono ne aapka badge cheen liya. Phir koshish karo.','आपकी साख ख़त्म हो गई। असली मतदाताओं को ग़लत चिह्नित करना और नकली को छोड़ देना, दोनों ने आपका बैज छीन लिया। फिर कोशिश कीजिए।'],
+ ['your rank','aapka rank','आपका रैंक'],
+ ['Form 7: object to an entry','Form 7: entry par aapatti','फ़ॉर्म 7: प्रविष्टि पर आपत्ति'],['Form 8: correct or change address','Form 8: sudharo ya pata badlo','फ़ॉर्म 8: सुधारें या पता बदलें'],['Form 6: new voter','Form 6: naya voter','फ़ॉर्म 6: नया मतदाता'],
+ ['A made-up town and made-up people, based on how the real roll process works. For real changes to the roll, use the official Election Commission portal or your local election office.','Kaalpanik shehar aur kaalpanik log, jo asli list ki prakriya par aadharit hain. Asli list mein badlaav ke liye Election Commission ka official portal ya apna sthaniya chunaav karyalay use kijiye.','काल्पनिक शहर और काल्पनिक लोग, जो असली सूची की प्रक्रिया पर आधारित हैं। सूची में असली बदलाव के लिए चुनाव आयोग का आधिकारिक पोर्टल या अपना स्थानीय निर्वाचन कार्यालय इस्तेमाल कीजिए।'],
+ ['Copy my result','Mera result copy karo','मेरा नतीजा कॉपी करें'],['Copied!','Copy ho gaya!','कॉपी हो गया!'],['Select the text above to copy','Copy karne ke liye upar ka text select karo','कॉपी करने के लिए ऊपर का पाठ चुनिए'],['Go to Matdaan Day','Matdaan Day par jao','मतदान दिवस पर चलें'],['Play again','Phir se khelo','फिर से खेलें'],
+ ['Daily case closed','Roz ki case band','दैनिक केस बंद'],['Jimmy won today','Aaj Jimmy jeet gaya','आज जिम्मी जीत गया'],
+ ['Today\u2019s roll is clean. Come back tomorrow for a new case file.','Aaj ki list saaf hai. Nayi case file ke liye kal aana.','आज की सूची साफ़ है। नई केस फ़ाइल के लिए कल आइए।'],
+ ['Your reputation ran out. Replay today\u2019s file, it is the same for everyone.','Aapki saakh khatam ho gayi. Aaj ki file phir se khelo, ye sabke liye ek jaisi hai.','आपकी साख ख़त्म हो गई। आज की फ़ाइल फिर से खेलिए, यह सबके लिए एक जैसी है।'],
+ ['day streak','din ka silsila','दिन का सिलसिला'],['Replay today\u2019s file','Aaj ki file phir khelo','आज की फ़ाइल फिर खेलें'],['Back to title','Title par wapas','शीर्षक पर वापस'],
+ ['Everyone gets the same voters today. Catch Jimmy\u2019s fakes, spare the genuine ones, and keep your streak alive.','Aaj sabko wahi voters milenge. Jimmy ke nakli naam pakdo, asli ko chhodo, aur apna silsila zinda rakho.','आज सबको वही मतदाता मिलेंगे। जिम्मी के नकली नाम पकड़िए, असली को बख़्श दीजिए, और अपना सिलसिला ज़िंदा रखिए।'],
+ ['The roll is clean and the booth is open. But Jimmy has arrived with a big smile.','List saaf hai aur booth khula hai. Par Jimmy badi muskaan ke saath aa gaya hai.','सूची साफ़ है और बूथ खुला है। पर जिम्मी बड़ी मुस्कान के साथ आ गया है।'],
+ ['Bro, you are busy. Give me your voter slip, I will vote for you. No tension!','Bro, aap busy ho. Apni voter parchi do, main aapki jagah vote de dunga. No tension!','भाई, आप व्यस्त हैं। अपनी मतदाता पर्ची दो, मैं आपकी जगह वोट दे दूँगा। कोई टेंशन नहीं!'],
+ ['No thanks, I will vote myself','Nahi shukriya, main khud vote dunga','नहीं धन्यवाद, मैं खुद वोट दूँगा'],['Sure, take it','Theek hai, le lo','ठीक है, ले लो'],['Oops','Oops','अरे!'],
+ ['Jimmy voted seven times in seven different names and giggled all the way home.','Jimmy ne saat alag naamon se saat baar vote diya aur hanste hue ghar gaya.','जिम्मी ने सात अलग नामों से सात बार वोट दिया और हँसते हुए घर गया।'],
+ ['voting in someone else\u2019s name is called personation, and it is a punishable offence. Your vote is personal.','Kisi aur ke naam par vote dena personation kehlata hai, aur ye dandniya apradh hai. Aapka vote nijee hai.','किसी और के नाम पर वोट देना प्रतिरूपण कहलाता है, और यह दंडनीय अपराध है। आपका वोट निजी है।'],
+ ['Take the slip back','Parchi wapas lo','पर्ची वापस ले लो'],
+ ['Pick your issue','Apna mudda chuno','अपना मुद्दा चुनिए'],
+ ['One vote, one issue that matters most to you. Each candidate will pitch a plan for it.','Ek vote, ek mudda jo aapke liye sabse zaroori hai. Har ummeedwar uspar apni yojana batayega.','एक वोट, एक मुद्दा जो आपके लिए सबसे ज़रूरी है। हर उम्मीदवार उस पर अपनी योजना बताएगा।'],
+ ['Water','Paani','पानी'],['Roads','Sadkein','सड़कें'],['Jobs','Naukriyan','नौकरियाँ'],['Schools','School','स्कूल'],
+ ['Taps in Gadbad Nagar run only on Tuesdays.','Gadbad Nagar mein nal sirf mangalvaar ko chalte hain.','गड़बड़ नगर में नल सिर्फ़ मंगलवार को चलते हैं।'],
+ ['The main road has more craters than the moon.','Mukhya sadak par chaand se zyada gadde hain.','मुख्य सड़क पर चाँद से ज़्यादा गड्ढे हैं।'],
+ ['Half the town\u2019s graduates are \u201Cbetween opportunities\u201D.','Shehar ke aadhe graduates \u201Cmauke ke beech mein\u201D hain.','शहर के आधे स्नातक \u201Cअवसरों के बीच\u201D हैं।'],
+ ['The school roof leaks, and so does the staff room gossip.','School ki chhat tapakti hai, aur staff room ki gossip bhi.','स्कूल की छत टपकती है, और स्टाफ़ रूम की गपशप भी।'],
+ ['Tap a candidate, then cast your vote.','Ek ummeedwar chuno, phir vote daalo.','एक उम्मीदवार चुनिए, फिर वोट डालिए।'],
+ ['The bars show how doable each promise is.','Bars dikhate hain ki har vaada kitna nibhaya ja sakta hai.','पट्टियाँ दिखाती हैं कि हर वादा कितना निभाया जा सकता है।'],
+ ['Cast my vote','Mera vote daalo','मेरा वोट डालो'],['Ink on your finger. Vote cast!','Ungli par syahi. Vote pad gaya!','उँगली पर स्याही। वोट पड़ गया!'],
+ ['Five years later:','Paanch saal baad:','पाँच साल बाद:'],['See what the others would have done','Dekho baaki kya karte','देखिए बाक़ी क्या करते'],['Try another issue','Doosra mudda aazmao','दूसरा मुद्दा आज़माइए'],
+ ['look at a candidate\u2019s track record and public affidavit, and ask how a promise will be paid for and by when.','Ummeedwar ka track record aur public affidavit dekhiye, aur poochiye ki vaade ka paisa kaun dega aur kab tak.','उम्मीदवार का पिछला रिकॉर्ड और सार्वजनिक हलफ़नामा देखिए, और पूछिए कि वादे का पैसा कौन देगा और कब तक।'],
+ ['Good. Your vote is yours alone.','Badhiya. Aapka vote sirf aapka hai.','बढ़िया। आपका वोट सिर्फ़ आपका है।'],['A plan with homework attached. Rare!','Homework ke saath aaya plan. Durlabh!','होमवर्क के साथ आई योजना। दुर्लभ!'],['Bold. Promises are cheap, budgets are not.','Himmat wali. Vaade sasta hai, budget nahi.','हिम्मती। वादे सस्ते हैं, बजट नहीं।'],['Decent. Now ask who pays for it.','Theek-thaak. Ab poochiye ki paise kaun dega.','ठीक-ठाक। अब पूछिए कि पैसे कौन देगा।'],
+ ['Chintu','Chintu','चिंटू'],['Advocate Arguelal','Vakeel Arguelal','वकील अर्गुलाल'],['Dr. PhD Prasad','Dr. PhD Prasad','डॉ. पीएचडी प्रसाद'],['Uncle-ji','Uncle-ji','अंकल-जी'],['Inaya','Inaya','इनाया'],
+ ['Tea-stall owner','Chai ki dukaan wale','चाय की दुकान वाले'],['Lawyer','Vakeel','वकील'],['Professor','Professor','प्रोफ़ेसर'],['Retired clerk','Retired clerk','सेवानिवृत्त क्लर्क'],['Influencer','Influencer','इन्फ्लुएंसर'],
+ ['I will leave everything for the country, except my tea.','Main desh ke liye sab kuch chhod dunga, bas apni chai nahi.','मैं देश के लिए सब कुछ छोड़ दूँगा, बस अपनी चाय नहीं।'],
+ ['I leave the country in good hands, pending appeal.','Main desh ko achche haathon mein chhodta hoon, apeel lambit hai.','मैं देश को अच्छे हाथों में छोड़ता हूँ, अपील लंबित है।'],
+ ['I will leave a 400-page report for the country. Nobody will read it.','Main desh ke liye 400 page ki report chhodunga. Koi nahi padhega.','मैं देश के लिए 400 पन्नों की रिपोर्ट छोड़ूँगा। कोई नहीं पढ़ेगा।'],
+ ['I will leave my pension for the country. Please do not ask.','Main desh ke liye apni pension chhod dunga. Kripya poochiye mat.','मैं देश के लिए अपनी पेंशन छोड़ दूँगा। कृपया पूछिए मत।'],
+ ['I will leave a link in my bio for the country.','Main desh ke liye apne bio mein ek link chhod dunga.','मैं देश के लिए अपने बायो में एक लिंक छोड़ दूँगा।'],
+ ['Free boiled water at every tea stall in town.','Shehar ke har chai stall par muft ubla hua paani.','शहर के हर चाय के ठेले पर मुफ़्त उबला हुआ पानी।'],
+ ['Tea stalls got safe water. Homes still waited for pipes. Great chai, patchy plumbing.','Chai stalls ko saaf paani mila. Gharon ko pipe ka intezaar raha. Badhiya chai, kachchi plumbing.','चाय के ठेलों को साफ़ पानी मिला। घरों को पाइप का इंतज़ार रहा। बढ़िया चाय, कच्ची प्लंबिंग।'],
+ ['Every pothole gets filled, with a tea break between each one.','Har gadda bharega, aur har gadde ke beech chai break.','हर गड्ढा भरा जाएगा, और हर गड्ढे के बीच चाय की छुट्टी।'],
+ ['Roads improved slowly, one break at a time. Traffic learned patience.','Sadkein dheere-dheere sudhri, ek break ek baar. Traffic ne sabr seekha.','सड़कें धीरे-धीरे सुधरीं, एक बार में एक छुट्टी। ट्रैफ़िक ने सब्र सीखा।'],
+ ['Every youth gets a tea stall and a business plan.','Har naujawan ko chai stall aur business plan milega.','हर नौजवान को चाय का ठेला और एक व्यापार योजना मिलेगी।'],
+ ['Gadbad Nagar now has 900 tea stalls and 12 customers. Brave, but demand is a thing.','Gadbad Nagar mein ab 900 chai stall hain aur 12 grahak. Himmat badhiya, par maang bhi koi cheez hoti hai.','गड़बड़ नगर में अब 900 चाय के ठेले हैं और 12 ग्राहक। हिम्मत बढ़िया, पर माँग भी कोई चीज़ होती है।'],
+ ['Free tea and biscuits in every school.','Har school mein muft chai aur biscuit.','हर स्कूल में मुफ़्त चाय और बिस्कुट।'],
+ ['Attendance rose at biscuit time. Marks stayed the same. The roof still leaked.','Biscuit time par attendance badhi. Number wahi rahe. Chhat tapakti rahi.','बिस्कुट के समय हाज़िरी बढ़ी। अंक वही रहे। छत टपकती रही।'],
+ ['Every leaking pipe will be taken to court.','Har tapakte pipe ko court le jaya jayega.','हर टपकते पाइप को अदालत ले जाया जाएगा।'],
+ ['Forty-one hearings later the pipes still leak, but the leaks are now fully documented.','Ikatalis sunwaiyon ke baad bhi pipe tapakte hain, par ab har leak ka poora record hai.','इकतालीस सुनवाइयों के बाद भी पाइप टपकते हैं, पर अब हर रिसाव का पूरा रिकॉर्ड है।'],
+ ['I object to this road. Sustained. Then overruled.','Mujhe is sadak par aapatti hai. Manzoor. Phir khaarij.','मुझे इस सड़क पर आपत्ति है। स्वीकार। फिर खारिज।'],
+ ['Every contractor was sued and none worked. The craters became a heritage site.','Har thekedar par mukadma hua aur kisi ne kaam nahi kiya. Gadde dharohar ban gaye.','हर ठेकेदार पर मुक़दमा हुआ और किसी ने काम नहीं किया। गड्ढे धरोहर बन गए।'],
+ ['Everyone gets a job in the legal system.','Sabko nyay vyavastha mein naukri milegi.','सबको न्याय व्यवस्था में नौकरी मिलेगी।'],
+ ['The courts hired nobody. The case backlog hired everyone\u2019s patience.','Adalaton ne kisi ko nahi rakha. Pending cases ne sabka sabr naukri par rakh liya.','अदालतों ने किसी को नौकरी नहीं दी। लंबित मामलों ने सबका सब्र नौकरी पर रख लिया।'],
+ ['Students will learn to argue. Teachers will object.','Bachche behas seekhenge. Teachers aapatti karenge.','बच्चे बहस करना सीखेंगे। शिक्षक आपत्ति करेंगे।'],
+ ['Debate scores soared and classes ran long. Nobody agrees on the syllabus yet.','Debate ke number badhe aur classes lambi chaliin. Syllabus par abhi tak koi sehmat nahi.','बहस के अंक बढ़े और कक्षाएँ लंबी चलीं। पाठ्यक्रम पर अब तक कोई सहमत नहीं।'],
+ ['A synergistic hydro-governance framework. Water is a stakeholder.','Ek synergistic hydro-governance framework. Paani ek stakeholder hai.','एक सिनर्जिस्टिक जल-शासन ढाँचा। पानी एक हितधारक है।'],
+ ['A superb 400-page water report arrived. Taps still ran on Tuesdays.','Shaandaar 400 page ki paani report aayi. Nal ab bhi mangalvaar ko hi chalte rahe.','शानदार 400 पन्नों की जल रिपोर्ट आई। नल अब भी मंगलवार को ही चलते रहे।'],
+ ['Evidence-based asphalt optimisation, peer reviewed.','Saboot par aadharit asphalt optimisation, peer reviewed.','प्रमाण-आधारित डामर अनुकूलन, सहकर्मी-समीक्षित।'],
+ ['Roads were surveyed and the best asphalt chosen. Half the budget went on the survey, but the roads are improving.','Sadkon ka survey hua aur sabse achha asphalt chuna gaya. Aadha budget survey mein gaya, par sadkein sudhar rahi hain.','सड़कों का सर्वे हुआ और सबसे अच्छा डामर चुना गया। आधा बजट सर्वे में गया, पर सड़कें सुधर रही हैं।'],
+ ['A skill ecosystem leveraging cross-sector synergies.','Cross-sector synergies ka fayda uthata ek skill ecosystem.','क्रॉस-सेक्टर तालमेल का लाभ उठाने वाला कौशल तंत्र।'],
+ ['Training centres opened and some students found work. The brochure beat the placement rate, but both rose.','Training centre khule aur kuch students ko kaam mila. Brochure placement rate se aage rahi, par dono badhe.','प्रशिक्षण केंद्र खुले और कुछ छात्रों को काम मिला। ब्रोशर प्लेसमेंट दर से आगे रहा, पर दोनों बढ़े।'],
+ ['Smart classrooms with PhD-level pedagogy.','PhD-level pedagogy wale smart classrooms.','पीएचडी-स्तर की शिक्षण पद्धति वाली स्मार्ट कक्षाएँ।'],
+ ['New smart boards arrived. Teachers needed training, training needed budget, and half the boards stayed off.','Naye smart board aaye. Teachers ko training chahiye thi, training ko budget, aur aadhe board band hi rahe.','नए स्मार्ट बोर्ड आए। शिक्षकों को प्रशिक्षण चाहिए था, प्रशिक्षण को बजट, और आधे बोर्ड बंद ही रहे।'],
+ ['Wells worked fine in my time. We will revive the wells.','Hamare zamane mein kuein theek chalte the. Hum kuein phir zinda karenge.','हमारे ज़माने में कुएँ ठीक चलते थे। हम कुएँ फिर से ज़िंदा करेंगे।'],
+ ['Three wells revived and forty thousand people stayed thirsty. Nostalgia is not a water supply.','Teen kuein zinda hue aur chaalis hazaar log pyaase rahe. Nostalgia paani ki supply nahi hoti.','तीन कुएँ ज़िंदा हुए और चालीस हज़ार लोग प्यासे रहे। पुरानी यादें पानी की आपूर्ति नहीं होतीं।'],
+ ['Roads should be wide like my morning walks. No speed breakers.','Sadkein meri subah ki sair jaisi chaudi honi chahiye. Speed breaker nahi.','सड़कें मेरी सुबह की सैर जितनी चौड़ी होनी चाहिए। कोई स्पीड ब्रेकर नहीं।'],
+ ['Wide roads came, and so did very fast scooters. Fewer potholes, more honking.','Chaudi sadkein aayin, aur bahut tez scooter bhi. Gadde kam, horn zyada.','चौड़ी सड़कें आईं, और बहुत तेज़ स्कूटर भी। गड्ढे कम, हॉर्न ज़्यादा।'],
+ ['Jobs were easy in my time. Just ask uncle.','Hamare zamane mein naukri aasaan thi. Bas uncle se poochho.','हमारे ज़माने में नौकरी आसान थी। बस अंकल से पूछो।'],
+ ['Recommendations ruled the town and qualified people stayed on waiting lists.','Sifarish ka raaj chala aur qabil log waiting list mein hi rahe.','सिफ़ारिश का राज चला और योग्य लोग प्रतीक्षा सूची में ही रहे।'],
+ ['Strict discipline and no phones, like in my time.','Kadak anushasan aur phone nahi, bilkul hamare zamane jaisa.','कड़ा अनुशासन और फ़ोन नहीं, बिल्कुल हमारे ज़माने जैसा।'],
+ ['Order improved and curiosity took a hit. Rulers are back, and so is homework.','Anushasan sudhra aur jigyasa ko chot lagi. Ruler wapas aaye, homework bhi.','अनुशासन सुधरा और जिज्ञासा को चोट पहुँची। स्केल लौट आए, और होमवर्क भी।'],
+ ['Pipes will be fixed, but only the photogenic ones.','Pipe theek honge, par sirf photogenic wale.','पाइप ठीक होंगे, पर सिर्फ़ फ़ोटोजेनिक वाले।'],
+ ['The main street got glossy new pipes. The back lanes got a hashtag.','Main road ko chamchamate naye pipe mile. Gaaliyon ko ek hashtag mila.','मुख्य सड़क को चमकदार नए पाइप मिले। गलियों को एक हैशटैग मिला।'],
+ ['Potholes will be made Instagram-worthy.','Gaddon ko Instagram-worthy banaya jayega.','गड्ढों को इंस्टाग्राम-लायक बनाया जाएगा।'],
+ ['Potholes now have filters. Vehicles still have bad suspension.','Gaddon par ab filter hain. Gaadiyon ka suspension ab bhi kharab hai.','गड्ढों पर अब फ़िल्टर हैं। गाड़ियों का सस्पेंशन अब भी ख़राब है।'],
+ ['Every youth becomes an influencer.','Har naujawan influencer banega.','हर नौजवान इन्फ्लुएंसर बनेगा।'],
+ ['Everyone has followers and nobody has income. Algorithms are not employers.','Sabke paas followers hain aur kisi ke paas aamdani nahi. Algorithm naukri dene wale nahi hote.','सबके पास फ़ॉलोअर हैं और किसी के पास आमदनी नहीं। एल्गोरिदम नौकरी देने वाले नहीं होते।'],
+ ['School uniforms get a stylish redesign.','School uniform ka stylish naya design.','स्कूल की वर्दी का स्टाइलिश नया डिज़ाइन।'],
+ ['The uniforms look great. The roof still leaks, but now stylishly.','Uniform shaandaar lagte hain. Chhat ab bhi tapakti hai, par ab stylish andaaz mein.','वर्दियाँ शानदार लगती हैं। छत अब भी टपकती है, पर अब स्टाइलिश अंदाज़ में।'],
+ ['big fake moustache','bada nakli moonch','बड़ी नकली मूँछ'],['cardboard glasses','gatte ke chashme','गत्ते के चश्मे'],['red clown nose and glasses','laal joker naak aur chashme','लाल जोकर नाक और चश्मे'],['fake white beard','nakli safed dadhi','नकली सफ़ेद दाढ़ी'],['party hat','party topi','पार्टी टोपी'],['orange wig and sunglasses','narangi wig aur kaale chashme','नारंगी विग और काले चश्मे'],
+ ['My badges','Mere badges','मेरे बैज'],['Close','Band karo','बंद करें'],['Earned','Mil gaya','मिल गया'],['Locked','Band','बंद'],
+ ['fake entries caught','pakdi gayi nakli entries','पकड़ी गई नकली प्रविष्टियाँ'],['best story score','story ka best score','कहानी का सर्वश्रेष्ठ अंक'],['votes cast','daale gaye vote','डाले गए वोट'],
+ ['First catch','Pehla shikaar','पहला शिकार'],['Catch your first fake entry.','Apni pehli nakli entry pakdo.','अपनी पहली नकली प्रविष्टि पकड़िए।'],
+ ['Jimmy\u2019s nightmare','Jimmy ka darawna sapna','जिम्मी का बुरा सपना'],['Catch 25 fake entries in total.','Kul 25 nakli entry pakdo.','कुल 25 नकली प्रविष्टियाँ पकड़िए।'],
+ ['Score 600 in the story.','Story mein 600 score karo.','कहानी में 600 अंक बनाइए।'],['Score 1500 in the story.','Story mein 1500 score karo.','कहानी में 1500 अंक बनाइए।'],['Score 2600 in the story.','Story mein 2600 score karo.','कहानी में 2600 अंक बनाइए।'],
+ ['Three-day streak','Teen din ka silsila','तीन दिन का सिलसिला'],['Win the daily case file three days in a row.','Roz ki case file lagataar teen din jeeto.','दैनिक केस फ़ाइल लगातार तीन दिन जीतिए।'],
+ ['Seven-day streak','Saat din ka silsila','सात दिन का सिलसिला'],['Win the daily case file seven days in a row.','Roz ki case file lagataar saat din jeeto.','दैनिक केस फ़ाइल लगातार सात दिन जीतिए।'],
+ ['Thirty-day streak','Tees din ka silsila','तीस दिन का सिलसिला'],['Win the daily case file thirty days in a row.','Roz ki case file lagataar tees din jeeto.','दैनिक केस फ़ाइल लगातार तीस दिन जीतिए।'],
+ ['First vote','Pehla vote','पहला वोट'],['Cast a vote on Matdaan Day.','Matdaan Day par vote daalo.','मतदान दिवस पर वोट डालिए।'],
+ ['Issue explorer','Mudde ka khoji','मुद्दों का खोजी'],['Vote on all four issues on Matdaan Day.','Matdaan Day par chaaron mudde par vote daalo.','मतदान दिवस पर चारों मुद्दों पर वोट डालिए।']
+];
+var MAP = {hl:{}, hi:{}};
+TR.forEach(function(r){ MAP.hl[r[0]] = r[1]; MAP.hi[r[0]] = r[2]; });
+
+function ruleTr(s){
+  var m, hi = (lang === 'hi');
+  if ((m = s.match(/^Voter (\d+) of (\d+)$/))) return (hi ? 'मतदाता ' : 'Voter ') + m[1] + ' / ' + m[2];
+  if ((m = s.match(/^Level (\d) of 3: (.+)$/))) return (hi ? 'स्तर ' : 'Level ') + m[1] + ' / 3: ' + T(m[2]);
+  if ((m = s.match(/^Level (\d) of 3$/))) return (hi ? 'स्तर ' : 'Level ') + m[1] + ' / 3';
+  if ((m = s.match(/^Level (\d) complete$/))) return hi ? 'स्तर ' + m[1] + ' पूरा' : 'Level ' + m[1] + ' poora';
+  if ((m = s.match(/^Streak (\d+)$/))) return (hi ? 'लगातार ' : 'Lagataar ') + m[1];
+  if ((m = s.match(/^Roll so far \((\d+)\)$/))) return (hi ? 'अब तक की सूची (' : 'Ab tak ki list (') + m[1] + ')';
+  if ((m = s.match(/^Daily Case File, (.+)$/))) return (hi ? 'दैनिक केस फ़ाइल, ' : 'Roz ki case file, ') + m[1];
+  if ((m = s.match(/^This one was (.+)\.$/))) return (hi ? 'यह था: ' : 'Ye tha: ') + T(m[1]) + (hi ? '।' : '.');
+  if ((m = s.match(/^File Form (\d)$/))) return hi ? 'फ़ॉर्म ' + m[1] + ' भरिए' : 'Form ' + m[1] + ' bharo';
+  if ((m = s.match(/^(\d+) of (\d+) badges earned$/))) return hi ? m[2] + ' में से ' + m[1] + ' बैज मिले' : m[2] + ' me se ' + m[1] + ' badge mile';
+  if ((m = s.match(/^(\d+) of (\d+)$/))) return hi ? m[2] + ' में से ' + m[1] : m[2] + ' me se ' + m[1];
+  if ((m = s.match(/^score \(best (\d+)\)$/))) return (hi ? 'अंक (सर्वश्रेष्ठ ' : 'score (best ') + m[1] + ')';
+  if ((m = s.match(/^(Water|Roads|Jobs|Schools): who has the best plan\?$/))) return T(m[1]) + (hi ? ': सबसे अच्छी योजना किसकी है?' : ': sabse achhi yojana kiski hai?');
+  if ((m = s.match(/^You voted for (.+) on (.+)\.$/))) return hi ? 'आपने ' + T(m[2]) + ' के मुद्दे पर ' + T(m[1]) + ' को वोट दिया।' : 'Aapne ' + T(m[2]) + ' ke mudde par ' + T(m[1]) + ' ko vote diya.';
+  if ((m = s.match(/^Promise meter: (\d) of 5$/))) return (hi ? 'वादा मीटर: 5 में से ' : 'Vaada meter: 5 me se ') + m[1];
+  if ((m = s.match(/^\((\d) of 5\):$/))) return hi ? '(5 में से ' + m[1] + '):' : '(5 me se ' + m[1] + '):';
+  if ((m = s.match(/^New disguise: (.+)$/))) return (hi ? 'नया भेस: ' : 'Naya bhes: ') + T(m[1]);
+  if ((m = s.match(/^Badge unlocked: (.+)!$/))) return (hi ? 'बैज मिला: ' : 'Badge mila: ') + m[1].split(', ').map(T).join(', ') + '!';
+  if (/points|Reputation \u22121/.test(s)){
+    var o = s;
+    o = o.replace(/Form (\d) filed\./, function(a, n){ return hi ? 'फ़ॉर्म ' + n + ' भर दिया।' : 'Form ' + n + ' bhar diya.'; });
+    o = o.replace(/\+(\d+) points/, function(a, n){ return hi ? '+' + n + ' अंक' : '+' + n + ' points'; });
+    o = o.replace(/\(stamp bonus \+(\d+)\)/, function(a, n){ return hi ? '(मुहर बोनस +' + n + ')' : '(stamp bonus +' + n + ')'; });
+    o = o.replace(/, speed bonus included/, hi ? ', गति बोनस शामिल' : ', speed bonus shaamil');
+    o = o.replace(/Reputation \u22121\./, hi ? 'साख −1।' : 'Saakh −1.');
+    return o;
+  }
+  return null;
+}
+function T(s){
+  if (lang === 'en') return s;
+  var m = MAP[lang];
+  if (m[s]) return m[s];
+  var q = s.match(/^\u201C(.+)\u201D$/);
+  if (q && m[q[1]]) return '\u201C' + m[q[1]] + '\u201D';
+  return ruleTr(s) || s;
+}
+function cf(c, f){
+  if (lang === 'en') return c[f];
+  var r = CASEI[c.n + '|' + c.no];
+  if (!r) return c[f];
+  var parts = (lang === 'hl' ? r.hl : r.hi).split('##'), i = {note:0, line:1, fact:2}[f];
+  return parts[i] || c[f];
+}
+function trNode(n){
+  var orig = (n.__en !== undefined) ? n.__en : n.nodeValue;
+  if (orig == null) return;
+  var key = orig.trim(); if (!key) return;
+  var out = (lang === 'en') ? key : T(key);
+  if (n.__en === undefined && out === key) return;
+  n.__en = orig;
+  var val = orig.replace(key, function(){ return out; });
+  if (n.nodeValue !== val) n.nodeValue = val;
+}
+function trTree(root){
+  var w = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, null), n;
+  while ((n = w.nextNode())){ if (n.parentNode && /^(SCRIPT|STYLE)$/.test(n.parentNode.nodeName)) continue; trNode(n); }
+}
+function syncLang(){
+  var b = $('lang'); b.textContent = LSHORT[lang]; b.setAttribute('aria-label', 'Language: ' + LFULL[lang]);
+  document.documentElement.lang = (lang === 'hi') ? 'hi' : (lang === 'hl' ? 'hi-Latn' : 'en');
+}
+function setLang(l){
+  lang = l; try { localStorage.setItem('vld-lang', l); } catch(e){}
+  trTree(document.body); syncLang();
+  if ($('panel').classList.contains('show') && S.cur){ $('card').innerHTML = cardHTML(S.cur); renderLedger(); }
+}
+function setupLangRow(){
+  [].forEach.call(document.querySelectorAll('.langrow button'), function(b){
+    b.setAttribute('aria-pressed', String(b.getAttribute('data-l') === lang));
+    b.onclick = function(){ setLang(b.getAttribute('data-l')); setupLangRow(); };
+  });
+}
+
+/* ---------- title and tutorial ---------- */
+var TUT = [
+  {h:'Meet Tota and Jimmy', p:'Tota the parrot is your sidekick. Jugaadu Jimmy is your \u201Cbest friend\u201D, and he keeps sneaking fake names onto the roll while smiling at you.'},
+  {h:'Read the card, then decide', p:'Each voter walks up with an ID card. Looks genuine? Clear them. Something off? Flag it: duplicate, deceased, not a person, wrong address, or not on the roll yet.'},
+  {h:'Pick the right form', p:'Red flags use Form 7 (object to an entry), yellow uses Form 8 (correct details or address), blue uses Form 6 (new voter). Flag a real voter by mistake and your reputation takes the hit.'}
+];
+function showTitle(){
+  showModal('<h1>Voter List Detective</h1><p>Gadbad Nagar\u2019s electoral roll has a few too many names, and one of them is wearing a fake moustache. Audit the roll, catch Jimmy\u2019s fakes, and learn how the real forms work.</p><button class="primary" id="go">Start the case</button><button class="secondary" id="daily">Daily case file</button><button class="secondary" id="mday">Matdaan Day</button><button class="secondary" id="badges">My badges</button><p class="small" style="margin:12px 0 0">Fictional town, fictional people. No real politicians, parties or voter data.</p><div class="langrow" role="group" aria-label="Language"><button data-l="en">English</button><button data-l="hl">Hinglish</button><button data-l="hi">हिन्दी</button></div>',
+    function(){ $('go').onclick = function(){ showTut(0); }; $('daily').onclick = function(){ hideModal(); startDaily(); }; $('mday').onclick = function(){ hideModal(); startMatdaan(); }; $('badges').onclick = showBadges; setupLangRow(); });
+}
+function showTut(i){
+  var t = TUT[i], last = (i === TUT.length - 1);
+  showModal('<h2>' + t.h + '</h2><p>' + t.p + '</p><button class="primary" id="go">' + (last ? 'Open the roll' : 'Next') + '</button>',
+    function(){ $('go').onclick = function(){ if (last){ hideModal(); startGame(); } else showTut(i+1); }; });
+}
+
+/* ---------- wire up ---------- */
+$('actions').addEventListener('click', function(e){
+  var b = e.target.closest('button[data-c]'); if (b) decide(b.getAttribute('data-c'));
+});
+$('ledgerBtn').addEventListener('click', function(){
+  var l = $('ledger'); l.hidden = !l.hidden; this.setAttribute('aria-expanded', String(!l.hidden));
+});
+
+new MutationObserver(function(muts){
+  muts.forEach(function(mu){
+    if (mu.type === 'characterData') trNode(mu.target);
+    else [].forEach.call(mu.addedNodes, function(a){ if (a.nodeType === 3) trNode(a); else if (a.nodeType === 1) trTree(a); });
+  });
+}).observe(document.body, {childList:true, subtree:true, characterData:true});
+$('lang').onclick = function(){ setLang(LANGS[(LANGS.indexOf(lang) + 1) % LANGS.length]); setupLangRow(); };
+syncLang(); if (lang !== 'en') trTree(document.body);
+document.addEventListener('pointerdown', audioInit);
+document.addEventListener('click', function(e){ if (e.target.closest && e.target.closest('.primary,.secondary,.issuebtn,.act')) sfx.tap(); });
+function syncMute(){ var b = $('mute'); b.textContent = muted ? '\uD83D\uDD07' : '\uD83D\uDD0A'; b.setAttribute('aria-label', muted ? 'Sound off' : 'Sound on'); }
+$('mute').onclick = function(){ muted = !muted; try { localStorage.setItem('vld-muted', muted ? '1' : '0'); } catch(e){} syncMute(); if (!muted){ audioInit(); sfx.tap(); } };
+syncMute();
+if (GL) buildWorld();
+else { var n = document.createElement('p'); n.className = 'nogl'; n.textContent = 'Your browser could not start 3D graphics, so the town scene is hidden. The game still works.'; document.body.appendChild(n); }
+stage.setLevel(1); updateHUD();
+requestAnimationFrame(function(t){ last = t; loop(t); });
+showTitle();
+})();
+</script>
+</body>
+</html>
