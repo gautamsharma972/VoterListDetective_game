@@ -174,6 +174,11 @@ button{font-family:inherit}
 .badge b{font-size:14px;line-height:1.2}
 .badge span{font-size:12px;color:var(--muted);line-height:1.3}
 .badge small{font-size:11.5px;font-weight:700}
+#mute,#lang{display:none}
+.modebtn{display:flex;flex-direction:column;gap:2px;align-items:flex-start;text-align:left;width:100%;background:transparent;color:var(--panel-text);border:2px solid var(--line);border-radius:12px;padding:10px 12px;font:inherit;cursor:pointer;min-height:56px;margin-top:8px}
+.modebtn b{font-family:var(--display);font-weight:400;font-size:18px}
+.modebtn span{font-size:13px;color:var(--muted);line-height:1.3}
+.modebtn:hover{border-color:var(--gold)}
 @media (prefers-reduced-motion: reduce){*{transition:none!important;animation:none!important}}
 </style>
 </head>
@@ -186,6 +191,7 @@ button{font-family:inherit}
   <div class="chip right"><span id="score">0</span><small id="streak">Streak 0</small></div>
   <button id="mute" class="mutebtn" aria-label="Sound on">🔊</button>
   <button id="lang" class="mutebtn" aria-label="Language" style="font-size:14px;font-weight:700">EN</button>
+  <button id="menu" class="mutebtn" aria-label="Menu" style="font-size:20px">☰</button>
 </header>
 
 <div id="bubbles">
@@ -672,7 +678,7 @@ function loop(now){
     if (p >= 1){ tweens.splice(i,1); if (tw.done) tw.done(); }
   }
 
-  if (S.timerOn){
+  if (S.timerOn && !S.paused){
     S.tLeft -= dt;
     var cap = LEVELS[S.lvl].timer;
     var fill = $('timerFill');
@@ -791,7 +797,7 @@ function nextCase(){
   $('result').classList.remove('show');
   var L = LEVELS[S.lvl], c = L.cases[S.idx];
   S.cur = c; S.locked = true; S.timerOn = false;
-  stage.enter(c, function(){
+  var sid = S.sid; stage.enter(c, function(){ if (sid !== S.sid) return;
     $('caseno').textContent = 'Voter ' + (S.idx+1) + ' of ' + L.cases.length;
     $('card').innerHTML = cardHTML(c);
     renderLedger();
@@ -1289,7 +1295,14 @@ var TR = [
  ['Each voter walks up with an ID card. Looks genuine? Clear them. Something off? Flag it: duplicate, deceased, not a person, wrong address, or not on the roll yet.','Har voter ID card ke saath aata hai. Sahi lagta hai? Clear karo. Kuch gadbad? Flag karo: duplicate, mrit, insaan nahi, galat pata, ya abhi list mein nahi.','हर मतदाता पहचान पत्र के साथ आता है। सही लगे तो मंज़ूर कीजिए। कुछ गड़बड़ लगे तो चिह्नित कीजिए: दोहरी प्रविष्टि, मृतक, इंसान नहीं, ग़लत पता, या अभी सूची में नहीं।'],
  ['Pick the right form','Sahi form chuno','सही फ़ॉर्म चुनिए'],
  ['Red flags use Form 7 (object to an entry), yellow uses Form 8 (correct details or address), blue uses Form 6 (new voter). Flag a real voter by mistake and your reputation takes the hit.','Laal flag mein Form 7 (entry par aapatti), peela mein Form 8 (details ya pata sudharna), neela mein Form 6 (naya voter). Galti se asli voter ko flag kiya to aapki saakh girti hai.','लाल निशान में फ़ॉर्म 7 (प्रविष्टि पर आपत्ति), पीले में फ़ॉर्म 8 (जानकारी या पता सुधारना), नीले में फ़ॉर्म 6 (नया मतदाता)। ग़लती से असली मतदाता को चिह्नित किया तो आपकी साख गिरेगी।'],
- ['Next','Aage','आगे'],['Open the roll','List kholo','सूची खोलिए'],
+ ['Next','Aage','आगे'],
+ ['Menu','Menu','मेन्यू'],['Resume','Wapas khelo','जारी रखें'],['Choose a game mode','Game mode chuno','खेल का तरीक़ा चुनिए'],['Story mode','Story mode','कहानी मोड'],
+ ['Three levels against Jugaadu Jimmy. Learn the forms as you play.','Jugaadu Jimmy ke khilaaf teen level. Khelte hue forms seekho.','जुगाड़ू जिम्मी के ख़िलाफ़ तीन स्तर। खेलते हुए फ़ॉर्म सीखिए।'],
+ ['A fresh set of voters every day. Keep your streak alive.','Roz voters ka naya set. Apna silsila banaye rakho.','हर दिन मतदाताओं का नया समूह। अपना सिलसिला बनाए रखिए।'],
+ ['Pick an issue, meet the candidates, cast your vote.','Mudda chuno, ummeedwaron se milo, vote daalo.','मुद्दा चुनिए, उम्मीदवारों से मिलिए, वोट डालिए।'],
+ ['Streaks, catches and ranks.','Silsile, pakde gaye naam aur rank.','सिलसिले, पकड़े गए नाम और रैंक।'],
+ ['Sound: on','Awaaz: on','आवाज़: चालू'],['Sound: off','Awaaz: off','आवाज़: बंद'],
+ ['Starting a mode restarts it.','Mode shuru karne par wo dobara shuru hota hai.','कोई मोड शुरू करने पर वह फिर से शुरू होता है।'],['Open the roll','List kholo','सूची खोलिए'],
  ['The Roll Room','Roll Room','सूची कक्ष'],['Jimmy\u2019s Disguises','Jimmy ke bhes','जिम्मी के भेस'],['The Mega Scheme','Mega Scheme','महा-योजना'],
  ['Gadbad Nagar\u2019s voter roll is a mess. Check every voter who walks up. Genuine? Clear them. Something off? Flag it and file the right form.','Gadbad Nagar ki voter list ka bura haal hai. Jo bhi voter aaye, use jaanchiye. Sahi hai? Clear karo. Kuch gadbad? Flag karo aur sahi form bharo.','गड़बड़ नगर की मतदाता सूची का बुरा हाल है। जो भी मतदाता आए, उसे जाँचिए। सही है तो मंज़ूर कीजिए। कुछ गड़बड़ हो तो चिह्नित कीजिए और सही फ़ॉर्म भरिए।'],
  ['Jimmy is back with new tricks. Twins, lookalikes and a few entries that are not even people. Be careful: some strange cases are perfectly real.','Jimmy naye tareekon ke saath wapas aa gaya hai. Judwa log, hamshakl aur kuch entries jo insaan hi nahi hain. Dhyaan rakhiye: kuch ajeeb cases bilkul asli hain.','जिम्मी नई चालों के साथ लौट आया है। जुड़वाँ, हमशक्ल और कुछ ऐसी प्रविष्टियाँ जो इंसान ही नहीं हैं। सावधान रहिए: कुछ अजीब मामले बिल्कुल असली हैं।'],
@@ -1487,13 +1500,53 @@ function setupLangRow(){
   });
 }
 
+/* ---------- main menu ---------- */
+stage.clearVoter = function(){
+  if (!GL || !cur3d) return;
+  scene.remove(cur3d); var i = chars.indexOf(cur3d); if (i > -1) chars.splice(i, 1); cur3d = null;
+};
+function leaveCurrent(){
+  S.sid = (S.sid || 0) + 1; S.paused = false; S.timerOn = false; S.locked = true;
+  ['panel','result','vote'].forEach(function(id){ $(id).classList.remove('show'); });
+  $('stamp').classList.remove('show'); $('stamp').innerHTML = '';
+  $('tota').hidden = true; $('jim').hidden = true;
+  stage.clearLineup(); stage.clearVoter();
+}
+function showTitle(){ showMenu(!!S.paused); }
+function showMenu(fromHud){
+  var intro = fromHud
+    ? '<h2>Menu</h2><button class="primary" id="resume">Resume</button><h3 style="margin:14px 0 0">Choose a game mode</h3><p class="small" style="margin:2px 0 0">Starting a mode restarts it.</p>'
+    : '<h1>Voter List Detective</h1><p>Gadbad Nagar\u2019s electoral roll has a few too many names, and one of them is wearing a fake moustache. Audit the roll, catch Jimmy\u2019s fakes, and learn how the real forms work.</p><h3 style="margin:0">Choose a game mode</h3>';
+  var h = intro +
+    '<button class="modebtn" id="m-story"><b>Story mode</b><span>Three levels against Jugaadu Jimmy. Learn the forms as you play.</span></button>' +
+    '<button class="modebtn" id="m-daily"><b>Daily case file</b><span>A fresh set of voters every day. Keep your streak alive.</span></button>' +
+    '<button class="modebtn" id="m-mday"><b>Matdaan Day</b><span>Pick an issue, meet the candidates, cast your vote.</span></button>' +
+    '<button class="modebtn" id="m-badges"><b>My badges</b><span>Streaks, catches and ranks.</span></button>' +
+    '<button class="secondary" id="snd">' + (muted ? 'Sound: off' : 'Sound: on') + '</button>' +
+    '<div class="langrow" role="group" aria-label="Language"><button data-l="en">English</button><button data-l="hl">Hinglish</button><button data-l="hi">हिन्दी</button></div>' +
+    '<p class="small" style="margin:12px 0 0">Fictional town, fictional people. No real politicians, parties or voter data.</p>';
+  showModal(h, function(){
+    if (fromHud){ $('resume').onclick = function(){ S.paused = false; hideModal(); }; }
+    $('m-story').onclick = function(){ leaveCurrent(); hideModal(); if (!S.tutDone){ S.tutDone = true; showTut(0); } else startGame(); };
+    $('m-daily').onclick = function(){ leaveCurrent(); hideModal(); startDaily(); };
+    $('m-mday').onclick = function(){ leaveCurrent(); hideModal(); startMatdaan(); };
+    $('m-badges').onclick = showBadges;
+    $('snd').onclick = function(){
+      muted = !muted; try { localStorage.setItem('vld-muted', muted ? '1' : '0'); } catch(e){}
+      syncMute(); if (!muted){ audioInit(); sfx.tap(); }
+      $('snd').textContent = muted ? 'Sound: off' : 'Sound: on';
+    };
+    setupLangRow();
+  });
+}
+
 /* ---------- title and tutorial ---------- */
 var TUT = [
   {h:'Meet Tota and Jimmy', p:'Tota the parrot is your sidekick. Jugaadu Jimmy is your \u201Cbest friend\u201D, and he keeps sneaking fake names onto the roll while smiling at you.'},
   {h:'Read the card, then decide', p:'Each voter walks up with an ID card. Looks genuine? Clear them. Something off? Flag it: duplicate, deceased, not a person, wrong address, or not on the roll yet.'},
   {h:'Pick the right form', p:'Red flags use Form 7 (object to an entry), yellow uses Form 8 (correct details or address), blue uses Form 6 (new voter). Flag a real voter by mistake and your reputation takes the hit.'}
 ];
-function showTitle(){
+function showTitleOld(){
   showModal('<h1>Voter List Detective</h1><p>Gadbad Nagar\u2019s electoral roll has a few too many names, and one of them is wearing a fake moustache. Audit the roll, catch Jimmy\u2019s fakes, and learn how the real forms work.</p><button class="primary" id="go">Start the case</button><button class="secondary" id="daily">Daily case file</button><button class="secondary" id="mday">Matdaan Day</button><button class="secondary" id="badges">My badges</button><p class="small" style="margin:12px 0 0">Fictional town, fictional people. No real politicians, parties or voter data.</p><div class="langrow" role="group" aria-label="Language"><button data-l="en">English</button><button data-l="hl">Hinglish</button><button data-l="hi">हिन्दी</button></div>',
     function(){ $('go').onclick = function(){ showTut(0); }; $('daily').onclick = function(){ hideModal(); startDaily(); }; $('mday').onclick = function(){ hideModal(); startMatdaan(); }; $('badges').onclick = showBadges; setupLangRow(); });
 }
@@ -1517,6 +1570,7 @@ new MutationObserver(function(muts){
     else [].forEach.call(mu.addedNodes, function(a){ if (a.nodeType === 3) trNode(a); else if (a.nodeType === 1) trTree(a); });
   });
 }).observe(document.body, {childList:true, subtree:true, characterData:true});
+$('menu').onclick = function(){ S.paused = true; showMenu(true); };
 $('lang').onclick = function(){ setLang(LANGS[(LANGS.indexOf(lang) + 1) % LANGS.length]); setupLangRow(); };
 syncLang(); if (lang !== 'en') trTree(document.body);
 document.addEventListener('pointerdown', audioInit);
